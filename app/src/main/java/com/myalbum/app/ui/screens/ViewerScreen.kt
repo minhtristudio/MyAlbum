@@ -1,20 +1,52 @@
 package com.myalbum.app.ui.screens
 
+import android.content.Intent
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
-import androidx.compose.foundation.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -23,21 +55,17 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import coil.compose.AsyncImage
 import com.myalbum.app.data.MediaItem
 import com.myalbum.app.ui.theme.AppColors
-import kotlin.math.absoluteValue
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewerScreen(
     items: List<MediaItem>,
@@ -50,7 +78,6 @@ fun ViewerScreen(
     var isSystemUiVisible by remember { mutableStateOf(true) }
     var currentPage by remember { mutableIntStateOf(initialIndex) }
 
-    // Keep screen on while viewing
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         onDispose {
@@ -58,7 +85,6 @@ fun ViewerScreen(
         }
     }
 
-    // Handle system UI visibility
     LaunchedEffect(isSystemUiVisible) {
         activity?.window?.let { window ->
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
@@ -84,8 +110,9 @@ fun ViewerScreen(
         return
     }
 
+    val safeIndex = initialIndex.coerceIn(0, items.size - 1)
     val pagerState = rememberPagerState(
-        initialPage = initialIndex.coerceIn(0, items.size - 1),
+        initialPage = safeIndex,
         pageCount = { items.size }
     )
 
@@ -110,8 +137,8 @@ fun ViewerScreen(
             )
         }
 
-        // Top bar (transparent, overlay)
-        AnimatedVisibility(
+        // Top bar
+        androidx.compose.animation.AnimatedVisibility(
             visible = isSystemUiVisible,
             enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
@@ -135,50 +162,46 @@ fun ViewerScreen(
                         )
                     }
 
-                    Column(
+                    androidx.compose.foundation.layout.Column(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp)
                     ) {
-                        Text(
-                            items[currentPage].name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            "${currentPage + 1} / ${items.size}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
-                    }
-
-                    // Favorite button
-                    IconButton(onClick = { /* Toggle favorite */ }) {
-                        Icon(
-                            if (items[currentPage].isFavorite) Icons.Default.Favorite
-                            else Icons.Default.FavoriteBorder,
-                            contentDescription = "Yêu thích",
-                            tint = if (items[currentPage].isFavorite) AppColors.FavoriteActive
-                            else Color.White
-                        )
-                    }
-
-                    // Share button
-                    IconButton(onClick = {
-                        val shareIntent = android.content.Intent().apply {
-                            action = android.content.Intent.ACTION_SEND
-                            type = items[currentPage].mimeType
-                            putExtra(
-                                android.content.Intent.EXTRA_STREAM,
-                                items[currentPage].uri
+                        val currentItem = items.getOrNull(currentPage)
+                        if (currentItem != null) {
+                            Text(
+                                currentItem.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
-                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            Text(
+                                "${currentPage + 1} / ${items.size}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
                         }
-                        context.startActivity(
-                            android.content.Intent.createChooser(shareIntent, "Chia sẻ")
+                    }
+
+                    IconButton(onClick = { /* Toggle favorite */ }) {
+                        val isFav = items.getOrNull(currentPage)?.isFavorite == true
+                        Icon(
+                            if (isFav) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Yêu thích",
+                            tint = if (isFav) AppColors.FavoriteActive else Color.White
                         )
+                    }
+
+                    IconButton(onClick = {
+                        val shareItem = items.getOrNull(currentPage) ?: return@IconButton
+                        val shareIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            type = shareItem.mimeType
+                            putExtra(Intent.EXTRA_STREAM, shareItem.uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ"))
                     }) {
                         Icon(
                             Icons.Default.Share,
@@ -187,8 +210,7 @@ fun ViewerScreen(
                         )
                     }
 
-                    // Info button
-                    IconButton(onClick = { /* Show info bottom sheet */ }) {
+                    IconButton(onClick = { /* Show info */ }) {
                         Icon(
                             Icons.Default.Info,
                             contentDescription = "Thông tin",
@@ -199,9 +221,9 @@ fun ViewerScreen(
             }
         }
 
-        // Bottom info bar
-        AnimatedVisibility(
-            visible = isSystemUiVisible && items[currentPage].isVideo,
+        // Bottom info bar for videos
+        androidx.compose.animation.AnimatedVisibility(
+            visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo == true,
             enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -210,25 +232,28 @@ fun ViewerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Black.copy(alpha = 0.5f)
             ) {
+                val currentItem = items.getOrNull(currentPage)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.Center
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        items[currentPage].name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        items[currentPage].formattedDuration,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
+                    if (currentItem != null) {
+                        Text(
+                            currentItem.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            currentItem.formattedDuration,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
         }
@@ -241,8 +266,18 @@ fun ViewerPage(
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+
+    val state = rememberTransformableState { zoomChange, panChange, _ ->
+        scale = (scale * zoomChange).coerceIn(1f, 5f)
+        if (scale > 1f) {
+            offset += panChange
+        } else {
+            offset = Offset.Zero
+        }
+    }
 
     Box(
         modifier = modifier
@@ -260,18 +295,10 @@ fun ViewerPage(
                     onTap = { onTap() }
                 )
             }
-            .transformable { zoomChange, panChange, _ ->
-                scale = (scale * zoomChange).coerceIn(1f, 5f)
-                if (scale > 1f) {
-                    offset += panChange
-                } else {
-                    offset = Offset.Zero
-                }
-            },
+            .transformable(state = state),
         contentAlignment = Alignment.Center
     ) {
         if (item.isVideo) {
-            // Video thumbnail with play overlay
             AsyncImage(
                 model = item.uri,
                 contentDescription = item.name,
@@ -287,17 +314,12 @@ fun ViewerPage(
                 filterQuality = FilterQuality.High
             )
 
-            // Play button overlay
             if (scale == 1f) {
                 Surface(
                     onClick = {
-                        val context = androidx.compose.ui.platform.LocalContext.current
-                        val intent = android.content.Intent(
-                            android.content.Intent.ACTION_VIEW,
-                            item.uri
-                        ).apply {
+                        val intent = Intent(Intent.ACTION_VIEW, item.uri).apply {
                             setDataAndType(item.uri, item.mimeType)
-                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
                         context.startActivity(intent)
                     },
@@ -317,7 +339,6 @@ fun ViewerPage(
                     }
                 }
 
-                // Video duration badge
                 if (item.duration > 0) {
                     Surface(
                         modifier = Modifier
@@ -336,7 +357,6 @@ fun ViewerPage(
                 }
             }
         } else {
-            // Photo
             AsyncImage(
                 model = item.uri,
                 contentDescription = item.name,
