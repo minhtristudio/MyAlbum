@@ -4,11 +4,9 @@ import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,13 +26,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Cached
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Style
@@ -43,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -61,9 +59,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -72,32 +73,31 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import coil.Coil
-import coil.ImageLoader
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-suspend fun saveGridSize(context: android.content.Context, size: Int) {
+suspend fun saveGridSize(context: Context, size: Int) {
     context.settingsDataStore.edit { prefs ->
         prefs[intPreferencesKey("grid_size")] = size
     }
 }
 
-suspend fun getGridSize(context: android.content.Context): Int {
+suspend fun getGridSize(context: Context): Int {
     return context.settingsDataStore.data.map { prefs ->
         prefs[intPreferencesKey("grid_size")] ?: 3
     }.first()
 }
 
-suspend fun saveThemeMode(context: android.content.Context, mode: String) {
+suspend fun saveThemeMode(context: Context, mode: String) {
     context.settingsDataStore.edit { prefs ->
         prefs[stringPreferencesKey("theme_mode")] = mode
     }
 }
 
-suspend fun getThemeMode(context: android.content.Context): String {
+suspend fun getThemeMode(context: Context): String {
     return context.settingsDataStore.data.map { prefs ->
         prefs[stringPreferencesKey("theme_mode")] ?: "system"
     }.first()
@@ -162,7 +162,7 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            // Appearance section
+            // ==================== Appearance Section ====================
             SectionHeader("Giao diện")
 
             // Dark mode toggle
@@ -229,7 +229,7 @@ fun SettingsScreen(
                             RadioButton(
                                 selected = (gridSize == size),
                                 onClick = null,
-                                colors = androidx.compose.material3.RadioButtonDefaults.colors(
+                                colors = RadioButtonDefaults.colors(
                                     selectedColor = MaterialTheme.colorScheme.primary
                                 )
                             )
@@ -240,13 +240,13 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.weight(1f))
-                            // Preview mini grid
                             MiniGridPreview(columns = size)
                         }
                     }
                 }
             }
 
+            // ==================== Storage Section ====================
             SectionHeader("Bộ nhớ")
 
             // Clear cache
@@ -269,22 +269,11 @@ fun SettingsScreen(
                 subtitle = "Xem dung lượng media"
             )
 
-            SectionHeader("Giới thiệu")
-
-            SettingItem(
-                icon = Icons.Default.Info,
-                title = "Phiên bản",
-                subtitle = packageInfo?.versionName ?: "1.0.0"
-            )
+            // ==================== App Info Section ====================
+            SectionHeader("Thông tin")
 
             SettingItem(
                 icon = Icons.Default.Android,
-                title = "Tên ứng dụng",
-                subtitle = "MyAlbum - Quản lý Ảnh & Video"
-            )
-
-            SettingItem(
-                icon = Icons.Default.Code,
                 title = "Android yêu cầu",
                 subtitle = "Android 8.0+ (API 26+)"
             )
@@ -303,17 +292,119 @@ fun SettingsScreen(
                 subtitle = "Quản lý quyền ứng dụng"
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Footer
+            // ==================== About Card - MT Studio Branding ====================
+            AboutCard(
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutCard(
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(20.dp)
+            ),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
+        tonalElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // App icon with gradient background
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        ),
+                        shape = RoundedCornerShape(18.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.PhotoLibrary,
+                    contentDescription = null,
+                    modifier = Modifier.size(36.dp),
+                    tint = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // App name
             Text(
-                "MyAlbum v${packageInfo?.versionName ?: "1.0.0"}\nXây dựng với ❤️ bằng Kotlin & Jetpack Compose",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                "MyAlbum",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            // Version
+            Text(
+                "v3.0.0",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Divider
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 16.dp)
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Developer info
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    Icons.Default.Favorite,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    "Phát triển bởi MT Studio",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Copyright
+            Text(
+                "\u00A9 2024 MT Studio. All rights reserved.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
     }

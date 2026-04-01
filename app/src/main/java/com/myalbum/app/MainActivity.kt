@@ -16,17 +16,22 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -49,7 +54,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,9 +62,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
@@ -79,7 +87,7 @@ import com.myalbum.app.ui.screens.FavoritesScreenWithNavigation
 import com.myalbum.app.ui.screens.GalleryScreenWithNavigation
 import com.myalbum.app.ui.screens.SettingsScreen
 import com.myalbum.app.ui.screens.ViewerScreen
-import com.myalbum.app.ui.theme.MyAlbumTheme
+import com.myalbum.app.ui.theme.AppColors
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
@@ -148,8 +156,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
         animationSpec = infiniteRepeatable(
             animation = tween(1200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
-        ),
-        label = "iconScale"
+        )
     )
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
@@ -157,13 +164,21 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
         animationSpec = infiniteRepeatable(
             animation = tween(1200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
-        ),
-        label = "iconAlpha"
+        )
     )
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF0E0E12),
+                        Color(0xFF1A1A2E),
+                        Color(0xFF16213E)
+                    )
+                )
+            )
     ) {
         Column(
             modifier = Modifier
@@ -172,50 +187,103 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Animated icon
-            Icon(
-                Icons.Outlined.PhotoLibrary,
-                contentDescription = null,
+            // Animated icon with glow background
+            Box(
                 modifier = Modifier
-                    .size(96.dp)
-                    .scale(scale)
-                    .graphicsLayer { this.alpha = alpha },
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(32.dp))
+                    .size(120.dp)
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = RoundedCornerShape(60.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Outlined.PhotoLibrary,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .scale(scale)
+                        .graphicsLayer { this.alpha = alpha },
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Spacer(modifier = Modifier.height(40.dp))
             Text(
-                "MyAlbum cần quyền truy cập",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface
+                "MyAlbum",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "Ứng dụng cần quyền truy cập thư viện ảnh và video trên thiết bị của bạn để hiển thị và quản lý media.",
+                "Ứng dụng cần quyền truy cập thư viện ảnh\nvà video trên thiết bị của bạn.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color.White.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(48.dp))
             Button(
                 onClick = onRequestPermissions,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Security, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Cấp quyền truy cập")
+                Text(
+                    "Cấp quyền truy cập",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
-            // Version footer
-            Text(
-                "v1.0.0",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            )
+            // MT Studio branding footer
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Color.White.copy(alpha = 0.05f)
+                        ),
+                    color = Color.Transparent
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.PhotoLibrary,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                        Text(
+                            "v3.0.0",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Made with \u2764 by MT Studio",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.4f)
+                )
+            }
         }
     }
 }
@@ -250,13 +318,16 @@ fun MainNavigation() {
     )
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
-                NavigationBar {
+                NavigationBar(
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                ) {
                     bottomNavItems.forEach { item ->
                         NavigationBarItem(
                             icon = {
@@ -364,7 +435,6 @@ fun MainNavigation() {
                     initialIndex = index,
                     onBack = { navController.navigateUp() },
                     onItemDeleted = { deletedIndex ->
-                        // Remove from local list and navigate back if needed
                         when (source) {
                             "gallery" -> galleryItems = galleryItems.toMutableList().also {
                                 if (deletedIndex < it.size) it.removeAt(deletedIndex)

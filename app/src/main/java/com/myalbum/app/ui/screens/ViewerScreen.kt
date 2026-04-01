@@ -1,19 +1,18 @@
 package com.myalbum.app.ui.screens
 
-import android.content.ContentResolver
-import android.content.Intent
+import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,8 +39,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Divider
@@ -62,7 +60,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,16 +72,20 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
-import com.myalbum.app.data.MediaItem
+import com.myalbum.app.data.MediaItem as AppMediaItem
 import com.myalbum.app.ui.theme.AppColors
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,14 +93,13 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ViewerScreen(
-    items: List<MediaItem>,
+    items: List<AppMediaItem>,
     initialIndex: Int,
     onBack: () -> Unit,
     onItemDeleted: ((Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
-    val scope = rememberCoroutineScope()
 
     var isSystemUiVisible by remember { mutableStateOf(true) }
     var currentPage by remember { mutableIntStateOf(initialIndex) }
@@ -106,10 +107,31 @@ fun ViewerScreen(
     var showInfoSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    // Create ONE ExoPlayer instance, reused across all video pages
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            playWhenReady = true
+            repeatMode = ExoPlayer.REPEAT_MODE_ONE
+        }
+    }
+
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         onDispose {
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            exoPlayer.release()
+        }
+    }
+
+    // Manage ExoPlayer media item when page changes
+    LaunchedEffect(currentPage) {
+        val currentItem = items.getOrNull(currentPage)
+        if (currentItem != null && currentItem.isVideo) {
+            exoPlayer.setMediaItem(MediaItem.fromUri(currentItem.uri))
+            exoPlayer.prepare()
+            exoPlayer.playWhenReady = true
+        } else {
+            exoPlayer.stop()
         }
     }
 
@@ -234,6 +256,7 @@ fun ViewerScreen(
             val item = items[page]
             ViewerPage(
                 item = item,
+                exoPlayer = exoPlayer,
                 onTap = { isSystemUiVisible = !isSystemUiVisible }
             )
         }
@@ -308,13 +331,13 @@ fun ViewerScreen(
 
                     IconButton(onClick = {
                         val shareItem = items.getOrNull(currentPage) ?: return@IconButton
-                        val shareIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
+                        val shareIntent = android.content.Intent().apply {
+                            action = android.content.Intent.ACTION_SEND
                             type = shareItem.mimeType
-                            putExtra(Intent.EXTRA_STREAM, shareItem.uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            putExtra(android.content.Intent.EXTRA_STREAM, shareItem.uri)
+                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ"))
+                        context.startActivity(android.content.Intent.createChooser(shareIntent, "Chia sẻ"))
                     }) {
                         Icon(
                             Icons.Default.Share,
@@ -356,39 +379,46 @@ fun ViewerScreen(
             )
         }
 
-        // Bottom info bar for videos
+        // Bottom info bar for videos (only when NOT using ExoPlayer controls)
         AnimatedVisibility(
-            visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo == true,
+            visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo != true,
             enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
+            // This bar is now only shown for non-video items
+            // For videos, ExoPlayer's PlayerView shows its own controls
+            Box(modifier = Modifier.fillMaxWidth())
+        }
+
+        // Video indicator badge (shown in top-right when viewing video)
+        AnimatedVisibility(
+            visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo == true,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopStart)
+        ) {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.Black.copy(alpha = 0.5f)
+                modifier = Modifier.padding(start = 8.dp, top = 60.dp),
+                shape = RoundedCornerShape(8.dp),
+                color = Color.Black.copy(alpha = 0.6f)
             ) {
-                val currentItem = items.getOrNull(currentPage)
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    if (currentItem != null) {
-                        Text(
-                            currentItem.name,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            currentItem.formattedDuration,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
-                    }
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        "Video",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White
+                    )
                 }
             }
         }
@@ -430,7 +460,7 @@ fun ViewerScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoBottomSheet(
-    item: MediaItem,
+    item: AppMediaItem,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -446,7 +476,6 @@ fun InfoBottomSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
-            // Title
             Text(
                 "Thông tin chi tiết",
                 style = MaterialTheme.typography.titleLarge,
@@ -457,11 +486,9 @@ fun InfoBottomSheet(
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
 
-            // File name
             InfoRow(label = "Tên file", value = item.name)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Resolution
             if (item.width > 0 && item.height > 0) {
                 InfoRow(
                     label = "Độ phân giải",
@@ -470,11 +497,9 @@ fun InfoBottomSheet(
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
-            // File size
             InfoRow(label = "Kích thước", value = item.formattedSize)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Date added
             val dateStr = try {
                 val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
                 sdf.format(Date(item.dateAdded * 1000L))
@@ -484,24 +509,20 @@ fun InfoBottomSheet(
             InfoRow(label = "Ngày thêm", value = dateStr)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Duration for videos
             if (item.isVideo && item.duration > 0) {
                 InfoRow(label = "Thời lượng", value = item.formattedDuration)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
-            // MIME type
             InfoRow(label = "Loại file", value = item.mimeType)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Media type
             InfoRow(
                 label = "Loại media",
                 value = if (item.isVideo) "Video" else "Ảnh"
             )
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Album
             if (item.bucketName.isNotEmpty()) {
                 InfoRow(label = "Album", value = item.bucketName)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -533,7 +554,7 @@ fun InfoRow(label: String, value: String) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.End
+            textAlign = TextAlign.End
         )
     }
 }
@@ -551,7 +572,6 @@ fun PageIndicator(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Show dots based on total pages
         val maxDots = 7
         val dotsToShow = if (totalPages <= maxDots) {
             (0 until totalPages).toList()
@@ -565,7 +585,7 @@ fun PageIndicator(
             val isSelected = i == currentPage
             val dotSize by animateFloatAsState(
                 targetValue = if (isSelected) 8f else 5f,
-                animationSpec = androidx.compose.animation.core.tween(200)
+                animationSpec = tween(200)
             )
             Box(
                 modifier = Modifier
@@ -588,14 +608,76 @@ fun PageIndicator(
     }
 }
 
-@Composable
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
 fun ViewerPage(
-    item: MediaItem,
+    item: AppMediaItem,
+    exoPlayer: ExoPlayer?,
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    if (item.isVideo && exoPlayer != null) {
+        VideoPlayerView(
+            exoPlayer = exoPlayer,
+            onTap = onTap,
+            modifier = modifier.fillMaxSize()
+        )
+    } else {
+        PhotoViewerPage(
+            item = item,
+            onTap = onTap,
+            modifier = modifier
+        )
+    }
+}
+
+@Composable
+fun VideoPlayerView(
+    exoPlayer: ExoPlayer,
+    onTap: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val currentOnTap = rememberUpdatedState(onTap)
+
+    Box(modifier = modifier) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = exoPlayer
+                    useController = true
+                    controllerShowTimeoutMs = 3000
+                    controllerHideOnTouch = true
+                    var startX = 0f
+                    var startY = 0f
+                    setOnTouchListener { _, event ->
+                        when (event.action) {
+                            MotionEvent.ACTION_DOWN -> {
+                                startX = event.rawX
+                                startY = event.rawY
+                            }
+                            MotionEvent.ACTION_UP -> {
+                                val dx = Math.abs(event.rawX - startX)
+                                val dy = Math.abs(event.rawY - startY)
+                                if (dx < 10f && dy < 10f) {
+                                    currentOnTap.value()
+                                }
+                            }
+                        }
+                        false // Don't consume - let PlayerView handle its own controls
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+@Composable
+fun PhotoViewerPage(
+    item: AppMediaItem,
+    onTap: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
@@ -627,79 +709,19 @@ fun ViewerPage(
             .transformable(state = state),
         contentAlignment = Alignment.Center
     ) {
-        if (item.isVideo) {
-            AsyncImage(
-                model = item.uri,
-                contentDescription = item.name,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    ),
-                contentScale = ContentScale.Fit,
-                filterQuality = FilterQuality.High
-            )
-
-            if (scale == 1f) {
-                Surface(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, item.uri).apply {
-                            setDataAndType(item.uri, item.mimeType)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(72.dp),
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.9f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.PlayArrow,
-                            contentDescription = "Phát video",
-                            modifier = Modifier.size(40.dp),
-                            tint = Color.Black
-                        )
-                    }
-                }
-
-                if (item.duration > 0) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(24.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = AppColors.VideoOverlay
-                    ) {
-                        Text(
-                            item.formattedDuration,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-        } else {
-            AsyncImage(
-                model = item.uri,
-                contentDescription = item.name,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    ),
-                contentScale = ContentScale.Fit,
-                filterQuality = FilterQuality.High
-            )
-        }
+        AsyncImage(
+            model = item.uri,
+            contentDescription = item.name,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offset.x,
+                    translationY = offset.y
+                ),
+            contentScale = ContentScale.Fit,
+            filterQuality = FilterQuality.High
+        )
     }
 }

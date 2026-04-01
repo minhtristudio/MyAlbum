@@ -15,72 +15,152 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkPurplePrimary = Color(0xFFD0BCFF)
-private val DarkPurpleSecondary = Color(0xFFCCC2DC)
-private val DarkPinkTertiary = Color(0xFFEFB8C8)
-private val DarkBackground = Color(0xFF141218)
-private val DarkSurface = Color(0xFF1D1B20)
-private val DarkSurfaceVariant = Color(0xFF2B2930)
+// ==================== Dark Theme Colors ====================
+// Deep, rich dark surfaces with purple/indigo accents
 
-private val LightPurplePrimary = Color(0xFF6750A4)
-private val LightPinkSecondary = Color(0xFFB76E79)
-private val LightWarmTertiary = Color(0xFF7D5260)
-private val LightBackground = Color(0xFFFFFBFE)
+private val DarkBackground = Color(0xFF0E0E12)
+private val DarkSurface = Color(0xFF1A1A2E)
+private val DarkSurfaceDim = Color(0xFF141420)
+private val DarkSurfaceBright = Color(0xFF222238)
+private val DarkSurfaceVariant = Color(0xFF252540)
+private val DarkSurfaceContainerLowest = Color(0xFF0A0A10)
+private val DarkSurfaceContainerLow = Color(0xFF12121E)
+private val DarkSurfaceContainer = Color(0xFF1C1C30)
+private val DarkSurfaceContainerHigh = Color(0xFF262638)
+private val DarkSurfaceContainerHighest = Color(0xFF303048)
+
+// Primary: Vibrant purple/indigo
+private val DarkPrimary = Color(0xFFBB86FC)
+private val DarkOnPrimary = Color(0xFF21005D)
+private val DarkPrimaryContainer = Color(0xFF4A2D8A)
+private val DarkOnPrimaryContainer = Color(0xFFEADDFF)
+
+// Secondary: Soft lavender
+private val DarkSecondary = Color(0xFFCCC2DC)
+private val DarkOnSecondary = Color(0xFF332D41)
+private val DarkSecondaryContainer = Color(0xFF4A4458)
+private val DarkOnSecondaryContainer = Color(0xFFE8DEF8)
+
+// Tertiary: Warm rose
+private val DarkTertiary = Color(0xFFEFB8C8)
+private val DarkOnTertiary = Color(0xFF492532)
+private val DarkTertiaryContainer = Color(0xFF633B48)
+private val DarkOnTertiaryContainer = Color(0xFFFFD8E4)
+
+// Outline & borders
+private val DarkOutline = Color(0xFF4A4460)
+private val DarkOutlineVariant = Color(0xFF2C2C44)
+
+// ==================== Light Theme Colors ====================
+// Soft, warm tones with gentle purple accents
+
+private val LightBackground = Color(0xFFF8F5FF)
 private val LightSurface = Color(0xFFFFFBFE)
-private val LightSurfaceVariant = Color(0xFFF3EFF4)
+private val LightSurfaceDim = Color(0xFFE4DDE8)
+private val LightSurfaceBright = Color(0xFFFFFBFE)
+private val LightSurfaceVariant = Color(0xFFF0E8F8)
+private val LightSurfaceContainerLowest = Color(0xFFFFFFFF)
+private val LightSurfaceContainerLow = Color(0xFFF5EEFA)
+private val LightSurfaceContainer = Color(0xFFEDE5F4)
+private val LightSurfaceContainerHigh = Color(0xFFE8E0EF)
+private val LightSurfaceContainerHighest = Color(0xFFE2D9EA)
+
+// Primary: Rich purple
+private val LightPrimary = Color(0xFF6750A4)
+private val LightOnPrimary = Color(0xFFFFFFFF)
+private val LightPrimaryContainer = Color(0xFFEADDFF)
+private val LightOnPrimaryContainer = Color(0xFF21005D)
+
+// Secondary: Warm rose
+private val LightSecondary = Color(0xFFB76E79)
+private val LightOnSecondary = Color(0xFFFFFFFF)
+private val LightSecondaryContainer = Color(0xFFFFD8E4)
+private val LightOnSecondaryContainer = Color(0xFF31111D)
+
+// Tertiary: Warm amber
+private val LightTertiary = Color(0xFF7D5260)
+private val LightOnTertiary = Color(0xFFFFFFFF)
+private val LightTertiaryContainer = Color(0xFFFFD8E4)
+private val LightOnTertiaryContainer = Color(0xFF31111D)
+
+// Outline & borders
+private val LightOutline = Color(0xFF79747E)
+private val LightOutlineVariant = Color(0xFFCAC4D0)
+
+// ==================== Color Schemes ====================
 
 private val DarkColorScheme = darkColorScheme(
-    primary = DarkPurplePrimary,
-    onPrimary = Color(0xFF381E72),
-    primaryContainer = Color(0xFF4F378B),
-    onPrimaryContainer = Color(0xFFEADDFF),
-    secondary = DarkPurpleSecondary,
-    onSecondary = Color(0xFF332D41),
-    secondaryContainer = Color(0xFF4A4458),
-    onSecondaryContainer = Color(0xFFE8DEF8),
-    tertiary = DarkPinkTertiary,
-    onTertiary = Color(0xFF492532),
-    tertiaryContainer = Color(0xFF633B48),
-    onTertiaryContainer = Color(0xFFFFD8E4),
+    primary = DarkPrimary,
+    onPrimary = DarkOnPrimary,
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
+    secondary = DarkSecondary,
+    onSecondary = DarkOnSecondary,
+    secondaryContainer = DarkSecondaryContainer,
+    onSecondaryContainer = DarkOnSecondaryContainer,
+    tertiary = DarkTertiary,
+    onTertiary = DarkOnTertiary,
+    tertiaryContainer = DarkTertiaryContainer,
+    onTertiaryContainer = DarkOnTertiaryContainer,
     background = DarkBackground,
     onBackground = Color(0xFFE6E1E5),
     surface = DarkSurface,
     onSurface = Color(0xFFE6E1E5),
+    surfaceDim = DarkSurfaceDim,
+    surfaceBright = DarkSurfaceBright,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = Color(0xFFCAC4D0),
-    outline = Color(0xFF938F99),
-    outlineVariant = Color(0xFF49454F),
+    surfaceContainerLowest = DarkSurfaceContainerLowest,
+    surfaceContainerLow = DarkSurfaceContainerLow,
+    surfaceContainer = DarkSurfaceContainer,
+    surfaceContainerHigh = DarkSurfaceContainerHigh,
+    surfaceContainerHighest = DarkSurfaceContainerHighest,
+    outline = DarkOutline,
+    outlineVariant = DarkOutlineVariant,
     error = Color(0xFFF2B8B5),
     onError = Color(0xFF601410),
     errorContainer = Color(0xFF8C1D18),
-    onErrorContainer = Color(0xFFF9DEDC)
+    onErrorContainer = Color(0xFFF9DEDC),
+    inverseSurface = Color(0xFFE6E1E5),
+    inverseOnSurface = Color(0xFF322F35),
+    inversePrimary = Color(0xFF6750A4)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = LightPurplePrimary,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFEADDFF),
-    onPrimaryContainer = Color(0xFF21005D),
-    secondary = LightPinkSecondary,
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFFFD8E4),
-    onSecondaryContainer = Color(0xFF31111D),
-    tertiary = LightWarmTertiary,
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFFFD8E4),
-    onTertiaryContainer = Color(0xFF31111D),
+    primary = LightPrimary,
+    onPrimary = LightOnPrimary,
+    primaryContainer = LightPrimaryContainer,
+    onPrimaryContainer = LightOnPrimaryContainer,
+    secondary = LightSecondary,
+    onSecondary = LightOnSecondary,
+    secondaryContainer = LightSecondaryContainer,
+    onSecondaryContainer = LightOnSecondaryContainer,
+    tertiary = LightTertiary,
+    onTertiary = LightOnTertiary,
+    tertiaryContainer = LightTertiaryContainer,
+    onTertiaryContainer = LightOnTertiaryContainer,
     background = LightBackground,
     onBackground = Color(0xFF1C1B1F),
     surface = LightSurface,
     onSurface = Color(0xFF1C1B1F),
+    surfaceDim = LightSurfaceDim,
+    surfaceBright = LightSurfaceBright,
     surfaceVariant = LightSurfaceVariant,
     onSurfaceVariant = Color(0xFF49454F),
-    outline = Color(0xFF79747E),
-    outlineVariant = Color(0xFFCAC4D0),
+    surfaceContainerLowest = LightSurfaceContainerLowest,
+    surfaceContainerLow = LightSurfaceContainerLow,
+    surfaceContainer = LightSurfaceContainer,
+    surfaceContainerHigh = LightSurfaceContainerHigh,
+    surfaceContainerHighest = LightSurfaceContainerHighest,
+    outline = LightOutline,
+    outlineVariant = LightOutlineVariant,
     error = Color(0xFFB3261E),
     onError = Color.White,
     errorContainer = Color(0xFFF9DEDC),
-    onErrorContainer = Color(0xFF410E0B)
+    onErrorContainer = Color(0xFF410E0B),
+    inverseSurface = Color(0xFF322F35),
+    inverseOnSurface = Color(0xFFF5EFF7),
+    inversePrimary = Color(0xFFD0BCFF)
 )
 
 @Composable
@@ -105,6 +185,7 @@ fun MyAlbumTheme(
             val window = (view.context as? android.app.Activity)?.window
             window?.let {
                 WindowCompat.getInsetsController(it, view).isAppearanceLightStatusBars = !darkTheme
+                WindowCompat.getInsetsController(it, view).isAppearanceLightNavigationBars = !darkTheme
             }
         }
     }
