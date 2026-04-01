@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MyAlbum</string>
+    <string name="gallery">Thư viện</string>
+    <string name="albums">Album</string>
+    <string name="favorites">Yêu thích</string>
+    <string name="settings">Cài đặt</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="no_media_found">Không tìm thấy ảnh/video nào</string>
+    <string name="no_favorites">Chưa có ảnh yêu thích</string>
+    <string name="no_albums">Không có album nào</string>
+    <string name="photos">Ảnh</string>
+    <string name="videos">Video</string>
+    <string name="all">Tất cả</string>
+    <string name="permission_required">Cần cấp quyền truy cập</string>
+    <string name="grant_permission">Cấp quyền</string>
+    <string name="error_loading">Lỗi khi tải dữ liệu</string>
+    <string name="items">%d mục</string>
+    <string name="today">Hôm nay</string>
+    <string name="yesterday">Hôm qua</string>
+    <string name="this_week">Tuần này</string>
+    <string name="this_month">Tháng này</string>
+    <string name="older">Cũ hơn</string>
+</resources>
