@@ -20,14 +20,7 @@ import androidx.core.view.WindowCompat
 
 private val DarkBackground = Color(0xFF0E0E12)
 private val DarkSurface = Color(0xFF1A1A2E)
-private val DarkSurfaceDim = Color(0xFF141420)
-private val DarkSurfaceBright = Color(0xFF222238)
 private val DarkSurfaceVariant = Color(0xFF252540)
-private val DarkSurfaceContainerLowest = Color(0xFF0A0A10)
-private val DarkSurfaceContainerLow = Color(0xFF12121E)
-private val DarkSurfaceContainer = Color(0xFF1C1C30)
-private val DarkSurfaceContainerHigh = Color(0xFF262638)
-private val DarkSurfaceContainerHighest = Color(0xFF303048)
 
 // Primary: Vibrant purple/indigo
 private val DarkPrimary = Color(0xFFBB86FC)
@@ -56,14 +49,7 @@ private val DarkOutlineVariant = Color(0xFF2C2C44)
 
 private val LightBackground = Color(0xFFF8F5FF)
 private val LightSurface = Color(0xFFFFFBFE)
-private val LightSurfaceDim = Color(0xFFE4DDE8)
-private val LightSurfaceBright = Color(0xFFFFFBFE)
 private val LightSurfaceVariant = Color(0xFFF0E8F8)
-private val LightSurfaceContainerLowest = Color(0xFFFFFFFF)
-private val LightSurfaceContainerLow = Color(0xFFF5EEFA)
-private val LightSurfaceContainer = Color(0xFFEDE5F4)
-private val LightSurfaceContainerHigh = Color(0xFFE8E0EF)
-private val LightSurfaceContainerHighest = Color(0xFFE2D9EA)
 
 // Primary: Rich purple
 private val LightPrimary = Color(0xFF6750A4)
@@ -106,21 +92,12 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = Color(0xFFE6E1E5),
     surface = DarkSurface,
     onSurface = Color(0xFFE6E1E5),
-    surfaceDim = DarkSurfaceDim,
-    surfaceBright = DarkSurfaceBright,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = Color(0xFFCAC4D0),
-    surfaceContainerLowest = DarkSurfaceContainerLowest,
-    surfaceContainerLow = DarkSurfaceContainerLow,
-    surfaceContainer = DarkSurfaceContainer,
-    surfaceContainerHigh = DarkSurfaceContainerHigh,
-    surfaceContainerHighest = DarkSurfaceContainerHighest,
     outline = DarkOutline,
     outlineVariant = DarkOutlineVariant,
     error = Color(0xFFF2B8B5),
     onError = Color(0xFF601410),
-    errorContainer = Color(0xFF8C1D18),
-    onErrorContainer = Color(0xFFF9DEDC),
     inverseSurface = Color(0xFFE6E1E5),
     inverseOnSurface = Color(0xFF322F35),
     inversePrimary = Color(0xFF6750A4)
@@ -143,21 +120,12 @@ private val LightColorScheme = lightColorScheme(
     onBackground = Color(0xFF1C1B1F),
     surface = LightSurface,
     onSurface = Color(0xFF1C1B1F),
-    surfaceDim = LightSurfaceDim,
-    surfaceBright = LightSurfaceBright,
     surfaceVariant = LightSurfaceVariant,
     onSurfaceVariant = Color(0xFF49454F),
-    surfaceContainerLowest = LightSurfaceContainerLowest,
-    surfaceContainerLow = LightSurfaceContainerLow,
-    surfaceContainer = LightSurfaceContainer,
-    surfaceContainerHigh = LightSurfaceContainerHigh,
-    surfaceContainerHighest = LightSurfaceContainerHighest,
     outline = LightOutline,
     outlineVariant = LightOutlineVariant,
     error = Color(0xFFB3261E),
     onError = Color.White,
-    errorContainer = Color(0xFFF9DEDC),
-    onErrorContainer = Color(0xFF410E0B),
     inverseSurface = Color(0xFF322F35),
     inverseOnSurface = Color(0xFFF5EFF7),
     inversePrimary = Color(0xFFD0BCFF)

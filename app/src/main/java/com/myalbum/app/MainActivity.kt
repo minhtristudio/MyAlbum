@@ -88,6 +88,7 @@ import com.myalbum.app.ui.screens.GalleryScreenWithNavigation
 import com.myalbum.app.ui.screens.SettingsScreen
 import com.myalbum.app.ui.screens.ViewerScreen
 import com.myalbum.app.ui.theme.AppColors
+import com.myalbum.app.ui.theme.MyAlbumTheme
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
