@@ -45,7 +45,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -454,12 +454,12 @@ fun InfoBottomSheet(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Divider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
 
             // File name
             InfoRow(label = "Tên file", value = item.name)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Resolution
             if (item.width > 0 && item.height > 0) {
@@ -467,12 +467,12 @@ fun InfoBottomSheet(
                     label = "Độ phân giải",
                     value = "${item.width} × ${item.height} px"
                 )
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             // File size
             InfoRow(label = "Kích thước", value = item.formattedSize)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Date added
             val dateStr = try {
@@ -482,29 +482,29 @@ fun InfoBottomSheet(
                 "${item.dateAdded}"
             }
             InfoRow(label = "Ngày thêm", value = dateStr)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Duration for videos
             if (item.isVideo && item.duration > 0) {
                 InfoRow(label = "Thời lượng", value = item.formattedDuration)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             // MIME type
             InfoRow(label = "Loại file", value = item.mimeType)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Media type
             InfoRow(
                 label = "Loại media",
                 value = if (item.isVideo) "Video" else "Ảnh"
             )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Album
             if (item.bucketName.isNotEmpty()) {
                 InfoRow(label = "Album", value = item.bucketName)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -569,7 +569,7 @@ fun PageIndicator(
             )
             Box(
                 modifier = Modifier
-                    .size(dp = dotSize.dp)
+                    .size(dotSize.dp)
                     .background(
                         color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f),
                         shape = CircleShape
