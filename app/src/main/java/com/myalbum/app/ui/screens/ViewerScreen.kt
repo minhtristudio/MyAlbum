@@ -58,6 +58,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -261,6 +262,7 @@ fun ViewerScreen(
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun ViewerPage(
     item: MediaItem,
     onTap: () -> Unit,
