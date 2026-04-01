@@ -2,7 +2,12 @@ package com.myalbum.app.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.*
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
@@ -10,38 +15,72 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val Purple80 = Color(0xFFD0BCFF)
-private val PurpleGrey80 = Color(0xFFCCC2DC)
-private val Pink80 = Color(0xFFEFB8C8)
+private val DarkPurplePrimary = Color(0xFFD0BCFF)
+private val DarkPurpleSecondary = Color(0xFFCCC2DC)
+private val DarkPinkTertiary = Color(0xFFEFB8C8)
+private val DarkBackground = Color(0xFF141218)
+private val DarkSurface = Color(0xFF1D1B20)
+private val DarkSurfaceVariant = Color(0xFF2B2930)
 
-private val Purple40 = Color(0xFF6650a4)
-private val PurpleGrey40 = Color(0xFF625b71)
-private val Pink40 = Color(0xFF7D5260)
+private val LightPurplePrimary = Color(0xFF6750A4)
+private val LightPinkSecondary = Color(0xFFB76E79)
+private val LightWarmTertiary = Color(0xFF7D5260)
+private val LightBackground = Color(0xFFFFFBFE)
+private val LightSurface = Color(0xFFFFFBFE)
+private val LightSurfaceVariant = Color(0xFFF3EFF4)
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-    background = Color(0xFF1C1B1F),
-    surface = Color(0xFF1C1B1F),
+    primary = DarkPurplePrimary,
     onPrimary = Color(0xFF381E72),
+    primaryContainer = Color(0xFF4F378B),
+    onPrimaryContainer = Color(0xFFEADDFF),
+    secondary = DarkPurpleSecondary,
     onSecondary = Color(0xFF332D41),
+    secondaryContainer = Color(0xFF4A4458),
+    onSecondaryContainer = Color(0xFFE8DEF8),
+    tertiary = DarkPinkTertiary,
     onTertiary = Color(0xFF492532),
+    tertiaryContainer = Color(0xFF633B48),
+    onTertiaryContainer = Color(0xFFFFD8E4),
+    background = DarkBackground,
     onBackground = Color(0xFFE6E1E5),
-    onSurface = Color(0xFFE6E1E5)
+    surface = DarkSurface,
+    onSurface = Color(0xFFE6E1E5),
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = Color(0xFFCAC4D0),
+    outline = Color(0xFF938F99),
+    outlineVariant = Color(0xFF49454F),
+    error = Color(0xFFF2B8B5),
+    onError = Color(0xFF601410),
+    errorContainer = Color(0xFF8C1D18),
+    onErrorContainer = Color(0xFFF9DEDC)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = LightPurplePrimary,
     onPrimary = Color.White,
+    primaryContainer = Color(0xFFEADDFF),
+    onPrimaryContainer = Color(0xFF21005D),
+    secondary = LightPinkSecondary,
     onSecondary = Color.White,
+    secondaryContainer = Color(0xFFFFD8E4),
+    onSecondaryContainer = Color(0xFF31111D),
+    tertiary = LightWarmTertiary,
     onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFFFD8E4),
+    onTertiaryContainer = Color(0xFF31111D),
+    background = LightBackground,
     onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F)
+    surface = LightSurface,
+    onSurface = Color(0xFF1C1B1F),
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = Color(0xFF49454F),
+    outline = Color(0xFF79747E),
+    outlineVariant = Color(0xFFCAC4D0),
+    error = Color(0xFFB3261E),
+    onError = Color.White,
+    errorContainer = Color(0xFFF9DEDC),
+    onErrorContainer = Color(0xFF410E0B)
 )
 
 @Composable

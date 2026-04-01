@@ -1,43 +1,59 @@
 package com.myalbum.app.ui.screens
 
+import android.content.ContentResolver
 import android.content.Intent
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +62,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,28 +73,38 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import coil.compose.AsyncImage
 import com.myalbum.app.data.MediaItem
 import com.myalbum.app.ui.theme.AppColors
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ViewerScreen(
     items: List<MediaItem>,
     initialIndex: Int,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onItemDeleted: ((Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
+    val scope = rememberCoroutineScope()
 
     var isSystemUiVisible by remember { mutableStateOf(true) }
     var currentPage by remember { mutableIntStateOf(initialIndex) }
+    var isSlideShowActive by remember { mutableStateOf(false) }
+    var showInfoSheet by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -99,7 +126,15 @@ fun ViewerScreen(
         }
     }
 
-    BackHandler { onBack() }
+    BackHandler {
+        if (showInfoSheet) {
+            showInfoSheet = false
+        } else if (isSlideShowActive) {
+            isSlideShowActive = false
+        } else {
+            onBack()
+        }
+    }
 
     if (items.isEmpty()) {
         Box(
@@ -121,6 +156,71 @@ fun ViewerScreen(
         currentPage = pagerState.currentPage
     }
 
+    // Slideshow auto-advance
+    LaunchedEffect(isSlideShowActive) {
+        if (isSlideShowActive) {
+            while (true) {
+                delay(3000)
+                val nextPage = (pagerState.currentPage + 1) % items.size
+                pagerState.animateScrollToPage(nextPage)
+            }
+        }
+    }
+
+    // Info bottom sheet
+    if (showInfoSheet) {
+        val currentItem = items.getOrNull(currentPage)
+        if (currentItem != null) {
+            InfoBottomSheet(
+                item = currentItem,
+                onDismiss = { showInfoSheet = false }
+            )
+        }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Xóa media") },
+            text = { Text("Bạn có chắc muốn xóa \"${items.getOrNull(currentPage)?.name}\"? Hành động này không thể hoàn tác.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        val itemToDelete = items.getOrNull(currentPage) ?: return@TextButton
+                        val contentUri = itemToDelete.contentUri
+                        try {
+                            val rowsDeleted = context.contentResolver.delete(
+                                contentUri,
+                                null,
+                                null
+                            )
+                            if (rowsDeleted > 0) {
+                                Toast.makeText(context, "Đã xóa thành công", Toast.LENGTH_SHORT).show()
+                                onItemDeleted?.invoke(currentPage)
+                                if (items.size <= 1) {
+                                    onBack()
+                                }
+                            } else {
+                                Toast.makeText(context, "Không thể xóa", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Lỗi: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Text("Xóa", color = AppColors.DangerRed)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -139,7 +239,7 @@ fun ViewerScreen(
         }
 
         // Top bar
-        androidx.compose.animation.AnimatedVisibility(
+        AnimatedVisibility(
             visible = isSystemUiVisible,
             enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
@@ -163,7 +263,7 @@ fun ViewerScreen(
                         )
                     }
 
-                    androidx.compose.foundation.layout.Column(
+                    Column(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp)
@@ -183,6 +283,18 @@ fun ViewerScreen(
                                 color = Color.White.copy(alpha = 0.7f)
                             )
                         }
+                    }
+
+                    // Slideshow button
+                    IconButton(onClick = {
+                        isSlideShowActive = !isSlideShowActive
+                        isSystemUiVisible = false
+                    }) {
+                        Icon(
+                            if (isSlideShowActive) Icons.Default.Close else Icons.Default.Repeat,
+                            contentDescription = "Trình chiếu",
+                            tint = if (isSlideShowActive) AppColors.SlideShowActive else Color.White
+                        )
                     }
 
                     IconButton(onClick = { /* Toggle favorite */ }) {
@@ -211,7 +323,15 @@ fun ViewerScreen(
                         )
                     }
 
-                    IconButton(onClick = { /* Show info */ }) {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Xóa",
+                            tint = Color.White
+                        )
+                    }
+
+                    IconButton(onClick = { showInfoSheet = true }) {
                         Icon(
                             Icons.Default.Info,
                             contentDescription = "Thông tin",
@@ -222,8 +342,22 @@ fun ViewerScreen(
             }
         }
 
+        // Page indicator dots
+        AnimatedVisibility(
+            visible = isSystemUiVisible && !isSlideShowActive,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            PageIndicator(
+                currentPage = currentPage,
+                totalPages = items.size,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+        }
+
         // Bottom info bar for videos
-        androidx.compose.animation.AnimatedVisibility(
+        AnimatedVisibility(
             visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo == true,
             enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
@@ -257,6 +391,199 @@ fun ViewerScreen(
                     }
                 }
             }
+        }
+
+        // Slideshow indicator
+        AnimatedVisibility(
+            visible = isSlideShowActive,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Surface(
+                modifier = Modifier.padding(16.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = AppColors.SlideShowActive.copy(alpha = 0.9f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Repeat,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        "Trình chiếu",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InfoBottomSheet(
+    item: MediaItem,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp)
+        ) {
+            // Title
+            Text(
+                "Thông tin chi tiết",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // File name
+            InfoRow(label = "Tên file", value = item.name)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Resolution
+            if (item.width > 0 && item.height > 0) {
+                InfoRow(
+                    label = "Độ phân giải",
+                    value = "${item.width} × ${item.height} px"
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            // File size
+            InfoRow(label = "Kích thước", value = item.formattedSize)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Date added
+            val dateStr = try {
+                val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+                sdf.format(Date(item.dateAdded * 1000L))
+            } catch (e: Exception) {
+                "${item.dateAdded}"
+            }
+            InfoRow(label = "Ngày thêm", value = dateStr)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Duration for videos
+            if (item.isVideo && item.duration > 0) {
+                InfoRow(label = "Thời lượng", value = item.formattedDuration)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            // MIME type
+            InfoRow(label = "Loại file", value = item.mimeType)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Media type
+            InfoRow(
+                label = "Loại media",
+                value = if (item.isVideo) "Video" else "Ảnh"
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Album
+            if (item.bucketName.isNotEmpty()) {
+                InfoRow(label = "Album", value = item.bucketName)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End
+        )
+    }
+}
+
+@Composable
+fun PageIndicator(
+    currentPage: Int,
+    totalPages: Int,
+    modifier: Modifier = Modifier
+) {
+    if (totalPages <= 1) return
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Show dots based on total pages
+        val maxDots = 7
+        val dotsToShow = if (totalPages <= maxDots) {
+            (0 until totalPages).toList()
+        } else {
+            val start = (currentPage - 3).coerceAtLeast(0)
+            val end = (currentPage + 3).coerceAtMost(totalPages - 1)
+            (start..end).toList()
+        }
+
+        for (i in dotsToShow) {
+            val isSelected = i == currentPage
+            val dotSize by animateFloatAsState(
+                targetValue = if (isSelected) 8f else 5f,
+                animationSpec = androidx.compose.animation.core.tween(200)
+            )
+            Box(
+                modifier = Modifier
+                    .size(dp = dotSize.dp)
+                    .background(
+                        color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f),
+                        shape = CircleShape
+                    )
+            )
+        }
+
+        if (totalPages > maxDots) {
+            Text(
+                "${currentPage + 1}/${totalPages}",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
         }
     }
 }

@@ -5,6 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +39,7 @@ import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +58,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -129,6 +141,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "iconScale"
+    )
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "iconAlpha"
+    )
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -140,34 +172,50 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Animated icon
             Icon(
                 Icons.Outlined.PhotoLibrary,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier
+                    .size(96.dp)
+                    .scale(scale)
+                    .graphicsLayer { this.alpha = alpha },
                 tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             Text(
                 "MyAlbum cần quyền truy cập",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 "Ứng dụng cần quyền truy cập thư viện ảnh và video trên thiết bị của bạn để hiển thị và quản lý media.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
             Button(
                 onClick = onRequestPermissions,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
                 Icon(Icons.Default.Security, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Cấp quyền truy cập")
             }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Version footer
+            Text(
+                "v1.0.0",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
         }
     }
 }
@@ -217,7 +265,12 @@ fun MainNavigation() {
                                     contentDescription = item.label
                                 )
                             },
-                            label = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
+                            label = {
+                                Text(
+                                    item.label,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
                             selected = currentRoute == item.route,
                             onClick = {
                                 if (currentRoute != item.route) {
@@ -309,7 +362,21 @@ fun MainNavigation() {
                 ViewerScreen(
                     items = items,
                     initialIndex = index,
-                    onBack = { navController.navigateUp() }
+                    onBack = { navController.navigateUp() },
+                    onItemDeleted = { deletedIndex ->
+                        // Remove from local list and navigate back if needed
+                        when (source) {
+                            "gallery" -> galleryItems = galleryItems.toMutableList().also {
+                                if (deletedIndex < it.size) it.removeAt(deletedIndex)
+                            }
+                            "album" -> albumItems = albumItems.toMutableList().also {
+                                if (deletedIndex < it.size) it.removeAt(deletedIndex)
+                            }
+                            "favorites" -> favoriteItems = favoriteItems.toMutableList().also {
+                                if (deletedIndex < it.size) it.removeAt(deletedIndex)
+                            }
+                        }
+                    }
                 )
             }
         }
