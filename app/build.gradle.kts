@@ -9,10 +9,15 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("keystore/release.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "MyAlbum2026!"
-            keyAlias = "myalbum"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "MyAlbum2026!"
+            val ksPath = System.getenv("KEYSTORE_PATH")
+            if (ksPath != null) {
+                storeFile = file(ksPath)
+            } else {
+                storeFile = file("myalbum-release.jks")
+            }
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "myalbum123"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "myalbum"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "myalbum123"
         }
     }
 
