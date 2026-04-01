@@ -66,7 +66,7 @@ import coil.compose.AsyncImage
 import com.myalbum.app.data.MediaItem
 import com.myalbum.app.ui.theme.AppColors
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ViewerScreen(
     items: List<MediaItem>,
