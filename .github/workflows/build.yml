@@ -1,9 +1,7 @@
-name: Build Android APK
+name: Build & Release Android APK
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
     branches: [ main, master ]
   workflow_dispatch:
 
@@ -38,7 +36,10 @@ jobs:
     - name: Build Debug APK
       run: ./gradlew assembleDebug --stacktrace
 
-    - name: Build Release APK
+    - name: Build Signed Release APK
+      env:
+        KEYSTORE_PASSWORD: MyAlbum2026!
+        KEY_PASSWORD: MyAlbum2026!
       run: ./gradlew assembleRelease --stacktrace
 
     - name: Upload Debug APK
@@ -51,6 +52,69 @@ jobs:
     - name: Upload Release APK
       uses: actions/upload-artifact@v4
       with:
-        name: MyAlbum-release
+        name: MyAlbum-release-signed
         path: app/build/outputs/apk/release/*.apk
         retention-days: 90
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Release APK
+      uses: actions/download-artifact@v4
+      with:
+        name: MyAlbum-release-signed
+        path: release-apk/
+
+    - name: Download Debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: MyAlbum-debug
+        path: debug-apk/
+
+    - name: Get version info
+      id: version
+      run: |
+        VERSION=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        DATE=$(date +'%Y%m%d')
+        echo "date=$DATE" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: 📱 MyAlbum v${{ steps.version.outputs.version }}
+        body: |
+          ## MyAlbum - Ứng dụng Quản lý Ảnh & Video
+
+          ### 🎨 Tính năng:
+          - 🖼️ Thư viện ảnh/video với grid view
+          - 📁 Album tự động từ thiết bị
+          - ❤️ Danh sách yêu thích
+          - 🔍 Tìm kiếm theo tên
+          - 📱 Viewer toàn màn hình với zoom
+          - 🎬 Phát video trực tiếp
+          - 🌙 Dark/Light theme + Dynamic Color
+          - ✅ Chọn nhiều, chia sẻ
+
+          ### 📋 Thông tin:
+          - Min Android: 8.0+ (API 26)
+          - Kích thước Release: ~8MB (signed)
+          - Kích thước Debug: ~20MB
+
+          ### 📦 Files:
+          - `MyAlbum-release-signed.apk` - Bản release đã sign (khuyên dùng)
+          - `MyAlbum-debug.apk` - Bản debug để test
+        files: |
+          release-apk/*.apk
+          debug-apk/*.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
