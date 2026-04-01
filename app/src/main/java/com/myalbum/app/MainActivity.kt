@@ -4,23 +4,69 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PhotoAlbum
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.PhotoAlbum
+import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.accompanist.permissions.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.myalbum.app.data.MediaItem
-import com.myalbum.app.ui.screens.*
+import com.myalbum.app.ui.screens.AlbumMediaScreenWithNavigation
+import com.myalbum.app.ui.screens.AlbumListScreen
+import com.myalbum.app.ui.screens.FavoritesScreenWithNavigation
+import com.myalbum.app.ui.screens.GalleryScreenWithNavigation
+import com.myalbum.app.ui.screens.SettingsScreen
+import com.myalbum.app.ui.screens.ViewerScreen
 import com.myalbum.app.ui.theme.MyAlbumTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +77,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MyAlbumTheme {
-                // Permission handling
                 val imagePermissionState = rememberPermissionState(
                     if (android.os.Build.VERSION.SDK_INT >= 33)
                         android.Manifest.permission.READ_MEDIA_IMAGES
@@ -92,8 +137,8 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(32.dp),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 Icons.Outlined.PhotoLibrary,
@@ -112,7 +157,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                 "Ứng dụng cần quyền truy cập thư viện ảnh và video trên thiết bị của bạn để hiển thị và quản lý media.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(32.dp))
             Button(
@@ -127,12 +172,19 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
     }
 }
 
-sealed class BottomNavItem(val route: String, val label: String, val icon: ImageVector, val selectedIcon: ImageVector) {
-    data object Gallery : BottomNavItem("gallery", "Thư viện", Icons.Outlined.PhotoLibrary, Icons.Filled.PhotoLibrary)
-    data object Albums : BottomNavItem("album_list", "Album", Icons.Outlined.PhotoAlbum, Icons.Filled.PhotoAlbum)
-    data object Favorites : BottomNavItem("favorites", "Yêu thích", Icons.Outlined.FavoriteBorder, Icons.Filled.Favorite)
-    data object Settings : BottomNavItem("settings", "Cài đặt", Icons.Outlined.Settings, Icons.Filled.Settings)
-}
+data class BottomNavItem(
+    val route: String,
+    val label: String,
+    val icon: ImageVector,
+    val selectedIcon: ImageVector
+)
+
+val bottomNavItems = listOf(
+    BottomNavItem("gallery", "Thư viện", Icons.Outlined.PhotoLibrary, Icons.Filled.PhotoLibrary),
+    BottomNavItem("album_list", "Album", Icons.Outlined.PhotoAlbum, Icons.Filled.PhotoAlbum),
+    BottomNavItem("favorites", "Yêu thích", Icons.Outlined.FavoriteBorder, Icons.Filled.Favorite),
+    BottomNavItem("settings", "Cài đặt", Icons.Outlined.Settings, Icons.Filled.Settings)
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,7 +193,6 @@ fun MainNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Track media items for viewer navigation
     var galleryItems by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
     var albumItems by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
     var favoriteItems by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
@@ -158,7 +209,7 @@ fun MainNavigation() {
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
                 NavigationBar {
-                    BottomNavItem.entries.forEach { item ->
+                    bottomNavItems.forEach { item ->
                         NavigationBarItem(
                             icon = {
                                 Icon(
@@ -171,7 +222,7 @@ fun MainNavigation() {
                             onClick = {
                                 if (currentRoute != item.route) {
                                     navController.navigate(item.route) {
-                                        popUpTo(BottomNavItem.Gallery.route) {
+                                        popUpTo("gallery") {
                                             saveState = true
                                         }
                                         launchSingleTop = true
@@ -188,8 +239,7 @@ fun MainNavigation() {
                     }
                 }
             }
-        },
-        containerColor = MaterialTheme.colorScheme.background
+        }
     ) { innerPadding ->
         NavHost(
             navController = navController,

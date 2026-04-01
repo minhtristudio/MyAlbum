@@ -42,9 +42,7 @@ fun SettingsScreen(
                 )
             )
         },
-        colors = ScaffoldDefaults.scaffoldColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier

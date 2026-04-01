@@ -1,14 +1,43 @@
 package com.myalbum.app.ui.screens
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.*
+import android.app.Application
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.PhotoAlbum
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,14 +53,13 @@ import com.myalbum.app.data.AlbumInfo
 import com.myalbum.app.data.MediaItem
 import com.myalbum.app.viewmodel.AlbumViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumListScreen(
     onAlbumClick: (String, String) -> Unit
 ) {
-    val viewModel: AlbumViewModel = viewModel(
-        factory = AlbumViewModel.factory(LocalContext.current)
-    )
+    val app = LocalContext.current.applicationContext as Application
+    val viewModel: AlbumViewModel = viewModel(factory = AlbumViewModel.factory(app))
     val albums by viewModel.albums.collectAsState()
 
     Scaffold(
@@ -47,10 +75,7 @@ fun AlbumListScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        },
-        colors = ScaffoldDefaults.scaffoldColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+        }
     ) { paddingValues ->
         if (albums.isEmpty()) {
             EmptyStateView(
@@ -164,16 +189,16 @@ fun AlbumCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumMediaScreenWithNavigation(
     bucketId: String,
     bucketName: String,
     navController: NavController,
-    onItemsLoaded: (List<MediaItem>) -> Unit,
-    viewModel: AlbumViewModel = viewModel(
-        factory = AlbumViewModel.factory(LocalContext.current)
-    )
+    onItemsLoaded: (List<MediaItem>) -> Unit
 ) {
+    val app = LocalContext.current.applicationContext as Application
+    val viewModel: AlbumViewModel = viewModel(factory = AlbumViewModel.factory(app))
     val mediaItems by viewModel.albumMedia.collectAsState()
 
     LaunchedEffect(bucketId) {
@@ -187,9 +212,8 @@ fun AlbumMediaScreenWithNavigation(
     }
 
     AlbumMediaScreen(
-        bucketId = bucketId,
         bucketName = bucketName,
-        viewModel = viewModel,
+        mediaItems = mediaItems,
         onMediaClick = { index ->
             navController.navigate("viewer/album/$index")
         },
@@ -197,16 +221,14 @@ fun AlbumMediaScreenWithNavigation(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumMediaScreen(
-    bucketId: String,
     bucketName: String,
-    viewModel: AlbumViewModel,
+    mediaItems: List<MediaItem>,
     onMediaClick: (Int) -> Unit,
     onBackClick: () -> Unit
 ) {
-    val mediaItems by viewModel.albumMedia.collectAsState()
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -234,10 +256,7 @@ fun AlbumMediaScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        },
-        colors = ScaffoldDefaults.scaffoldColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+        }
     ) { paddingValues ->
         if (mediaItems.isEmpty()) {
             EmptyStateView(
@@ -258,14 +277,14 @@ fun AlbumMediaScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreenWithNavigation(
     navController: NavController,
-    onItemsLoaded: (List<MediaItem>) -> Unit,
-    viewModel: AlbumViewModel = viewModel(
-        factory = AlbumViewModel.factory(LocalContext.current)
-    )
+    onItemsLoaded: (List<MediaItem>) -> Unit
 ) {
+    val app = LocalContext.current.applicationContext as Application
+    val viewModel: AlbumViewModel = viewModel(factory = AlbumViewModel.factory(app))
     val favorites by viewModel.favorites.collectAsState()
 
     LaunchedEffect(favorites) {
@@ -275,20 +294,19 @@ fun FavoritesScreenWithNavigation(
     }
 
     FavoritesScreen(
-        viewModel = viewModel,
+        favorites = favorites,
         onMediaClick = { index ->
             navController.navigate("viewer/favorites/$index")
         }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
-    viewModel: AlbumViewModel,
+    favorites: List<MediaItem>,
     onMediaClick: (Int) -> Unit
 ) {
-    val favorites by viewModel.favorites.collectAsState()
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -311,10 +329,7 @@ fun FavoritesScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        },
-        colors = ScaffoldDefaults.scaffoldColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+        }
     ) { paddingValues ->
         if (favorites.isEmpty()) {
             EmptyStateView(

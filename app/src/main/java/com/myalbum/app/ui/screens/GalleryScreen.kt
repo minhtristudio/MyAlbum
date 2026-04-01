@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import android.app.Application
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -36,7 +37,7 @@ import com.myalbum.app.viewmodel.GalleryViewModel
 @Composable
 fun GalleryScreen(
     viewModel: GalleryViewModel = viewModel(
-        factory = GalleryViewModel.factory(LocalContext.current)
+        factory = GalleryViewModel.factory(LocalContext.current.applicationContext as Application)
     ),
     onMediaClick: (Int) -> Unit
 ) {
@@ -104,9 +105,7 @@ fun GalleryScreen(
                 )
             }
         },
-        colors = ScaffoldDefaults.scaffoldColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         if (mediaItems.isEmpty()) {
             EmptyStateView(
@@ -489,7 +488,7 @@ fun GalleryScreenWithNavigation(
     navController: NavController,
     onItemsLoaded: (List<MediaItem>) -> Unit,
     viewModel: GalleryViewModel = viewModel(
-        factory = GalleryViewModel.factory(LocalContext.current)
+        factory = GalleryViewModel.factory(LocalContext.current.applicationContext as Application)
     )
 ) {
     val mediaItems by viewModel.mediaItems.collectAsState()
