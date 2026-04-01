@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.animateItemPlacement
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -605,7 +604,7 @@ fun MediaGridItem(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .animateItemPlacement(),
+            ,
         contentAlignment = Alignment.Center
     ) {
         // Shimmer placeholder while loading
