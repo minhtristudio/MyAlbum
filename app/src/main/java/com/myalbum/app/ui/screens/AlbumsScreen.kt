@@ -106,6 +106,7 @@ fun AlbumListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumCard(
     album: AlbumInfo,

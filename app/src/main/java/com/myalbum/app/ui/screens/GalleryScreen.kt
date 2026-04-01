@@ -1,6 +1,7 @@
 package com.myalbum.app.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
@@ -33,7 +34,7 @@ import com.myalbum.app.ui.theme.AppColors
 import androidx.navigation.NavController
 import com.myalbum.app.viewmodel.GalleryViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GalleryScreen(
     viewModel: GalleryViewModel = viewModel(
@@ -54,18 +55,24 @@ fun GalleryScreen(
     Scaffold(
         topBar = {
             if (showSearch) {
-                SearchBar(
-                    query = searchQuery,
-                    onQueryChange = { viewModel.setSearchQuery(it) },
-                    onSearch = {},
-                    onActiveChange = { if (!it) { showSearch = false; viewModel.setSearchQuery("") } },
-                    active = false,
-                    onCloseClick = { showSearch = false; viewModel.setSearchQuery("") },
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.setSearchQuery(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    placeholder = { Text("Tìm kiếm ảnh/video...") }
-                ) {}
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    placeholder = { Text("Tìm kiếm ảnh/video...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { showSearch = false; viewModel.setSearchQuery("") }) {
+                                Icon(Icons.Default.Close, contentDescription = "Đóng")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(28.dp)
+                )
             } else {
                 TopAppBar(
                     title = {
@@ -177,6 +184,7 @@ fun FilterChipsRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterChipItem(
     label: String,
@@ -304,6 +312,7 @@ fun MediaGrid(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaGridItem(
     item: MediaItem,
