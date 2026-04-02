@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -89,6 +90,8 @@ import com.myalbum.app.ui.screens.SettingsScreen
 import com.myalbum.app.ui.screens.ViewerScreen
 import com.myalbum.app.ui.theme.MyAlbumTheme
 import kotlinx.coroutines.Dispatchers
+import com.myalbum.app.ui.screens.getThemeMode
+import com.myalbum.app.ui.screens.getGridSize
 import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {

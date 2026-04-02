@@ -1,6 +1,7 @@
 package com.myalbum.app.ui.screens
 
 import android.app.Application
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
