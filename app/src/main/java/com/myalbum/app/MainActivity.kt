@@ -249,8 +249,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                 "MyAlbum",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
-                letterSpacing = (-0.5).dp
+                color = Color.White
             )
 
             Spacer(modifier = Modifier.height(8.dp))
