@@ -13,9 +13,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,7 +66,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -107,7 +104,6 @@ fun ViewerScreen(
     var showInfoSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Create ONE ExoPlayer instance, reused across all video pages
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             playWhenReady = true
@@ -123,7 +119,6 @@ fun ViewerScreen(
         }
     }
 
-    // Manage ExoPlayer media item when page changes
     LaunchedEffect(currentPage) {
         val currentItem = items.getOrNull(currentPage)
         if (currentItem != null && currentItem.isVideo) {
@@ -163,7 +158,7 @@ fun ViewerScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Không có media", color = MaterialTheme.colorScheme.onSurface)
+            Text("Khong co media", color = MaterialTheme.colorScheme.onSurface)
         }
         return
     }
@@ -178,7 +173,6 @@ fun ViewerScreen(
         currentPage = pagerState.currentPage
     }
 
-    // Slideshow auto-advance
     LaunchedEffect(isSlideShowActive) {
         if (isSlideShowActive) {
             while (true) {
@@ -189,7 +183,6 @@ fun ViewerScreen(
         }
     }
 
-    // Info bottom sheet
     if (showInfoSheet) {
         val currentItem = items.getOrNull(currentPage)
         if (currentItem != null) {
@@ -200,12 +193,11 @@ fun ViewerScreen(
         }
     }
 
-    // Delete confirmation dialog
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Xóa media") },
-            text = { Text("Bạn có chắc muốn xóa \"${items.getOrNull(currentPage)?.name}\"? Hành động này không thể hoàn tác.") },
+            title = { Text("Xoa media") },
+            text = { Text("Ban co chac muon xoa \"${items.getOrNull(currentPage)?.name}\"? Hanh dong khong the hoan tac.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -219,25 +211,25 @@ fun ViewerScreen(
                                 null
                             )
                             if (rowsDeleted > 0) {
-                                Toast.makeText(context, "Đã xóa thành công", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Da xoa thanh cong", Toast.LENGTH_SHORT).show()
                                 onItemDeleted?.invoke(currentPage)
                                 if (items.size <= 1) {
                                     onBack()
                                 }
                             } else {
-                                Toast.makeText(context, "Không thể xóa", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Khong the xoa", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
-                            Toast.makeText(context, "Lỗi: ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Loi: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 ) {
-                    Text("Xóa", color = AppColors.DangerRed)
+                    Text("Xoa", color = AppColors.DangerRed)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Hủy")
+                    Text("Huy")
                 }
             }
         )
@@ -281,7 +273,7 @@ fun ViewerScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại",
+                            contentDescription = "Quay lai",
                             tint = Color.White
                         )
                     }
@@ -308,14 +300,13 @@ fun ViewerScreen(
                         }
                     }
 
-                    // Slideshow button
                     IconButton(onClick = {
                         isSlideShowActive = !isSlideShowActive
                         isSystemUiVisible = false
                     }) {
                         Icon(
                             if (isSlideShowActive) Icons.Default.Close else Icons.Default.Repeat,
-                            contentDescription = "Trình chiếu",
+                            contentDescription = "Trinh chieu",
                             tint = if (isSlideShowActive) AppColors.SlideShowActive else Color.White
                         )
                     }
@@ -324,7 +315,7 @@ fun ViewerScreen(
                         val isFav = items.getOrNull(currentPage)?.isFavorite == true
                         Icon(
                             if (isFav) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Yêu thích",
+                            contentDescription = "Yeu thich",
                             tint = if (isFav) AppColors.FavoriteActive else Color.White
                         )
                     }
@@ -337,11 +328,11 @@ fun ViewerScreen(
                             putExtra(android.content.Intent.EXTRA_STREAM, shareItem.uri)
                             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
-                        context.startActivity(android.content.Intent.createChooser(shareIntent, "Chia sẻ"))
+                        context.startActivity(android.content.Intent.createChooser(shareIntent, "Chia se"))
                     }) {
                         Icon(
                             Icons.Default.Share,
-                            contentDescription = "Chia sẻ",
+                            contentDescription = "Chia se",
                             tint = Color.White
                         )
                     }
@@ -349,7 +340,7 @@ fun ViewerScreen(
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Xóa",
+                            contentDescription = "Xoa",
                             tint = Color.White
                         )
                     }
@@ -357,7 +348,7 @@ fun ViewerScreen(
                     IconButton(onClick = { showInfoSheet = true }) {
                         Icon(
                             Icons.Default.Info,
-                            contentDescription = "Thông tin",
+                            contentDescription = "Thong tin",
                             tint = Color.White
                         )
                     }
@@ -379,19 +370,7 @@ fun ViewerScreen(
             )
         }
 
-        // Bottom info bar for videos (only when NOT using ExoPlayer controls)
-        AnimatedVisibility(
-            visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo != true,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            // This bar is now only shown for non-video items
-            // For videos, ExoPlayer's PlayerView shows its own controls
-            Box(modifier = Modifier.fillMaxWidth())
-        }
-
-        // Video indicator badge (shown in top-right when viewing video)
+        // Video indicator badge
         AnimatedVisibility(
             visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo == true,
             enter = fadeIn(),
@@ -447,7 +426,7 @@ fun ViewerScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        "Trình chiếu",
+                        "Trinh chieu",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White
                     )
@@ -477,7 +456,7 @@ fun InfoBottomSheet(
                 .padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
             Text(
-                "Thông tin chi tiết",
+                "Thong tin chi tiet",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -486,18 +465,18 @@ fun InfoBottomSheet(
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
 
-            InfoRow(label = "Tên file", value = item.name)
+            InfoRow(label = "Ten file", value = item.name)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.width > 0 && item.height > 0) {
                 InfoRow(
-                    label = "Độ phân giải",
-                    value = "${item.width} × ${item.height} px"
+                    label = "Do phan giai",
+                    value = "${item.width} x ${item.height} px"
                 )
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
-            InfoRow(label = "Kích thước", value = item.formattedSize)
+            InfoRow(label = "Kich thuoc", value = item.formattedSize)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             val dateStr = try {
@@ -506,20 +485,20 @@ fun InfoBottomSheet(
             } catch (e: Exception) {
                 "${item.dateAdded}"
             }
-            InfoRow(label = "Ngày thêm", value = dateStr)
+            InfoRow(label = "Ngay them", value = dateStr)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.isVideo && item.duration > 0) {
-                InfoRow(label = "Thời lượng", value = item.formattedDuration)
+                InfoRow(label = "Thoi luong", value = item.formattedDuration)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
-            InfoRow(label = "Loại file", value = item.mimeType)
+            InfoRow(label = "Loai file", value = item.mimeType)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             InfoRow(
-                label = "Loại media",
-                value = if (item.isVideo) "Video" else "Ảnh"
+                label = "Loai media",
+                value = if (item.isVideo) "Video" else "Anh"
             )
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -663,7 +642,7 @@ fun VideoPlayerView(
                                 }
                             }
                         }
-                        false // Don't consume - let PlayerView handle its own controls
+                        false
                     }
                 }
             },
@@ -672,41 +651,17 @@ fun VideoPlayerView(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PhotoViewerPage(
     item: AppMediaItem,
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-
-    val state = rememberTransformableState { zoomChange, panChange, _ ->
-        scale = (scale * zoomChange).coerceIn(1f, 5f)
-        if (scale > 1f) {
-            offset += panChange
-        } else {
-            offset = Offset.Zero
-        }
-    }
+    var isZoomed by remember { mutableFloatStateOf(1f) }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onDoubleTap = {
-                        if (scale > 1f) {
-                            scale = 1f
-                            offset = Offset.Zero
-                        } else {
-                            scale = 2.5f
-                        }
-                    },
-                    onTap = { onTap() }
-                )
-            }
-            .transformable(state = state),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
@@ -715,10 +670,14 @@ fun PhotoViewerPage(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    translationX = offset.x,
-                    translationY = offset.y
+                    scaleX = isZoomed,
+                    scaleY = isZoomed
+                )
+                .combinedClickable(
+                    onClick = { onTap() },
+                    onDoubleClick = {
+                        isZoomed = if (isZoomed > 1f) 1f else 2.5f
+                    }
                 ),
             contentScale = ContentScale.Fit,
             filterQuality = FilterQuality.High

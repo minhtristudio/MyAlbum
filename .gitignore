@@ -18,3 +18,6 @@ bin/
 out/
 .navigation/
 *.log
+skills/
+download/
+.env

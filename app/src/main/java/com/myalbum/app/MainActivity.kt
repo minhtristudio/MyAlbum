@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -57,6 +56,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -87,8 +87,9 @@ import com.myalbum.app.ui.screens.FavoritesScreenWithNavigation
 import com.myalbum.app.ui.screens.GalleryScreenWithNavigation
 import com.myalbum.app.ui.screens.SettingsScreen
 import com.myalbum.app.ui.screens.ViewerScreen
-import com.myalbum.app.ui.theme.AppColors
 import com.myalbum.app.ui.theme.MyAlbumTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
@@ -97,7 +98,29 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            MyAlbumTheme {
+            // Dark theme state
+            var darkTheme by remember { mutableStateOf(isSystemInDarkTheme()) }
+
+            // Grid size state
+            var gridSize by remember { mutableIntStateOf(3) }
+
+            // Read saved settings on first composition
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    val mode = getThemeMode(applicationContext)
+                    val size = getGridSize(applicationContext)
+                    withContext(Dispatchers.Main) {
+                        darkTheme = when (mode) {
+                            "dark" -> true
+                            "light" -> false
+                            else -> isSystemInDarkTheme()
+                        }
+                        gridSize = size
+                    }
+                }
+            }
+
+            MyAlbumTheme(darkTheme = darkTheme) {
                 val imagePermissionState = rememberPermissionState(
                     if (android.os.Build.VERSION.SDK_INT >= 33)
                         android.Manifest.permission.READ_MEDIA_IMAGES
@@ -141,7 +164,11 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 } else {
-                    MainNavigation()
+                    MainNavigation(
+                        gridSize = gridSize,
+                        onGridSizeChanged = { newSize -> gridSize = newSize },
+                        onDarkThemeChanged = { isDark -> darkTheme = isDark }
+                    )
                 }
             }
         }
@@ -188,7 +215,6 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Animated icon with glow background
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -222,7 +248,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "Ứng dụng cần quyền truy cập thư viện ảnh\nvà video trên thiết bị của bạn.",
+                "Ung dung can quyen truy cap thu vien anh\nva video tren thiet bi cua ban.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
@@ -241,14 +267,13 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                 Icon(Icons.Default.Security, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Cấp quyền truy cập",
+                    "Cap quyen truy cap",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
 
             Spacer(modifier = Modifier.height(60.dp))
 
-            // MT Studio branding footer
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -272,7 +297,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                         )
                         Text(
-                            "v3.0.0",
+                            "v3.1.0",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.5f)
                         )
@@ -280,7 +305,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "Made with \u2764 by MT Studio",
+                    "Created by MT Studio",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.4f)
                 )
@@ -297,15 +322,19 @@ data class BottomNavItem(
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem("gallery", "Thư viện", Icons.Outlined.PhotoLibrary, Icons.Filled.PhotoLibrary),
+    BottomNavItem("gallery", "Thu vien", Icons.Outlined.PhotoLibrary, Icons.Filled.PhotoLibrary),
     BottomNavItem("album_list", "Album", Icons.Outlined.PhotoAlbum, Icons.Filled.PhotoAlbum),
-    BottomNavItem("favorites", "Yêu thích", Icons.Outlined.FavoriteBorder, Icons.Filled.Favorite),
-    BottomNavItem("settings", "Cài đặt", Icons.Outlined.Settings, Icons.Filled.Settings)
+    BottomNavItem("favorites", "Yeu thich", Icons.Outlined.FavoriteBorder, Icons.Filled.Favorite),
+    BottomNavItem("settings", "Cai dat", Icons.Outlined.Settings, Icons.Filled.Settings)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainNavigation() {
+fun MainNavigation(
+    gridSize: Int,
+    onGridSizeChanged: (Int) -> Unit,
+    onDarkThemeChanged: (Boolean) -> Unit
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -374,7 +403,8 @@ fun MainNavigation() {
             composable("gallery") {
                 GalleryScreenWithNavigation(
                     navController = navController,
-                    onItemsLoaded = { galleryItems = it }
+                    onItemsLoaded = { galleryItems = it },
+                    gridSize = gridSize
                 )
             }
 
@@ -399,20 +429,26 @@ fun MainNavigation() {
                     bucketId = bucketId,
                     bucketName = bucketName,
                     navController = navController,
-                    onItemsLoaded = { albumItems = it }
+                    onItemsLoaded = { albumItems = it },
+                    gridSize = gridSize
                 )
             }
 
             composable("favorites") {
                 FavoritesScreenWithNavigation(
                     navController = navController,
-                    onItemsLoaded = { favoriteItems = it }
+                    onItemsLoaded = { favoriteItems = it },
+                    gridSize = gridSize
                 )
             }
 
             composable("settings") {
                 SettingsScreen(
-                    onBack = { navController.navigateUp() }
+                    onBack = { navController.navigateUp() },
+                    darkTheme = darkTheme,
+                    onDarkThemeChanged = onDarkThemeChanged,
+                    gridSize = gridSize,
+                    onGridSizeChanged = onGridSizeChanged
                 )
             }
 

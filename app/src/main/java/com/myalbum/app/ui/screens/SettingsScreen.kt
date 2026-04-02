@@ -1,7 +1,6 @@
 package com.myalbum.app.ui.screens
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,12 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,51 +101,43 @@ suspend fun getThemeMode(context: Context): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    darkTheme: Boolean = false,
+    onDarkThemeChanged: (Boolean) -> Unit = {},
+    gridSize: Int = 3,
+    onGridSizeChanged: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val pm = context.packageManager
-    val packageInfo = remember {
-        try {
-            pm.getPackageInfo(context.packageName, 0)
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    var darkModeEnabled by remember { mutableStateOf(false) }
-    var gridSize by remember { mutableIntStateOf(3) }
     var cacheCleared by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        val themeMode = getThemeMode(context)
-        darkModeEnabled = themeMode == "dark"
-
-        val savedGridSize = getGridSize(context)
-        gridSize = savedGridSize
+    // Sync theme when it changes externally
+    LaunchedEffect(darkTheme) {
+        // Already synced from parent
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Cài đặt",
-                        style = MaterialTheme.typography.headlineMedium
+                        "Cai dat",
+                        style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = "Quay lai"
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -159,28 +146,25 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .padding(top = 12.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             // ==================== Appearance Section ====================
-            SectionHeader("Giao diện")
+            SectionHeader("Giao dien")
 
             // Dark mode toggle
             SettingSwitchItem(
                 icon = Icons.Default.Brightness6,
-                title = "Chế độ tối",
-                subtitle = if (darkModeEnabled) "Đang bật" else "Đang tắt",
-                checked = darkModeEnabled,
+                title = "Che do toi",
+                subtitle = if (darkTheme) "Dang bat" else "Dang tat",
+                checked = darkTheme,
                 onCheckedChange = { checked ->
-                    darkModeEnabled = checked
+                    onDarkThemeChanged(checked)
                     scope.launch {
                         saveThemeMode(
                             context,
                             if (checked) "dark" else "light"
-                        )
-                        AppCompatDelegate.setDefaultNightMode(
-                            if (checked) AppCompatDelegate.MODE_NIGHT_YES
-                            else AppCompatDelegate.MODE_NIGHT_NO
                         )
                     }
                 }
@@ -189,12 +173,11 @@ fun SettingsScreen(
             // Grid size selector
             SettingItem(
                 icon = Icons.Default.GridView,
-                title = "Số cột hiển thị",
-                subtitle = "$gridSize cột",
+                title = "So cot hien thi",
+                subtitle = "$gridSize cot",
                 onClick = null
             )
 
-            // Grid size radio buttons
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -216,7 +199,7 @@ fun SettingsScreen(
                                 .selectable(
                                     selected = (gridSize == size),
                                     onClick = {
-                                        gridSize = size
+                                        onGridSizeChanged(size)
                                         scope.launch {
                                             saveGridSize(context, size)
                                         }
@@ -235,7 +218,7 @@ fun SettingsScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                "$size cột",
+                                "$size cot",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -247,13 +230,12 @@ fun SettingsScreen(
             }
 
             // ==================== Storage Section ====================
-            SectionHeader("Bộ nhớ")
+            SectionHeader("Bo nho")
 
-            // Clear cache
             SettingItem(
                 icon = Icons.Default.DeleteSweep,
-                title = "Xóa bộ nhớ cache",
-                subtitle = if (cacheCleared) "Đã xóa thành công!" else "Giải phóng không gian ảnh",
+                title = "Xoa bo nho cache",
+                subtitle = if (cacheCleared) "Da xoa thanh cong!" else "Giai phong khong gian anh",
                 onClick = {
                     try {
                         Coil.imageLoader(context).memoryCache?.clear()
@@ -265,31 +247,31 @@ fun SettingsScreen(
 
             SettingItem(
                 icon = Icons.Default.Storage,
-                title = "Quản lý bộ nhớ",
-                subtitle = "Xem dung lượng media"
+                title = "Quan ly bo nho",
+                subtitle = "Xem dung luong media"
             )
 
             // ==================== App Info Section ====================
-            SectionHeader("Thông tin")
+            SectionHeader("Thong tin")
 
             SettingItem(
                 icon = Icons.Default.Android,
-                title = "Android yêu cầu",
+                title = "Android yeu cau",
                 subtitle = "Android 8.0+ (API 26+)"
             )
 
             SettingItem(
                 icon = Icons.Default.Style,
-                title = "Thiết kế",
+                title = "Thiet ke",
                 subtitle = "Material You (M3) - Jetpack Compose"
             )
 
-            SectionHeader("Quyền")
+            SectionHeader("Quyen")
 
             SettingItem(
                 icon = Icons.Default.Security,
-                title = "Quyền truy cập",
-                subtitle = "Quản lý quyền ứng dụng"
+                title = "Quyen truy cap",
+                subtitle = "Quan ly quyen ung dung"
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -327,7 +309,6 @@ fun AboutCard(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // App icon with gradient background
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -352,7 +333,6 @@ fun AboutCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // App name
             Text(
                 "MyAlbum",
                 style = MaterialTheme.typography.titleLarge,
@@ -360,16 +340,14 @@ fun AboutCard(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            // Version
             Text(
-                "v3.0.0",
+                "v3.1.0",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Divider
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -379,7 +357,6 @@ fun AboutCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Developer info
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -391,7 +368,7 @@ fun AboutCard(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    "Phát triển bởi MT Studio",
+                    "Phat trien boi MT Studio",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
@@ -400,7 +377,6 @@ fun AboutCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Copyright
             Text(
                 "\u00A9 2024 MT Studio. All rights reserved.",
                 style = MaterialTheme.typography.bodySmall,

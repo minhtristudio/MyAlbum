@@ -10,13 +10,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -124,10 +123,10 @@ fun groupMediaByDate(items: List<MediaItem>): Map<String, List<MediaItem>> {
         itemDate.set(Calendar.MILLISECOND, 0)
 
         val header = when {
-            itemDate.timeInMillis >= today.timeInMillis -> "Hôm nay"
-            itemDate.timeInMillis >= yesterday.timeInMillis -> "Hôm qua"
-            itemDate.timeInMillis >= weekStart.timeInMillis -> "Tuần này"
-            itemDate.timeInMillis >= monthStart.timeInMillis -> "Tháng này"
+            itemDate.timeInMillis >= today.timeInMillis -> "Hom nay"
+            itemDate.timeInMillis >= yesterday.timeInMillis -> "Hom qua"
+            itemDate.timeInMillis >= weekStart.timeInMillis -> "Tuan nay"
+            itemDate.timeInMillis >= monthStart.timeInMillis -> "Thang nay"
             else -> {
                 val sdf = SimpleDateFormat("MMMM yyyy", Locale("vi", "VN"))
                 sdf.format(Date(item.dateAdded * 1000L))
@@ -150,7 +149,8 @@ fun GalleryScreen(
     viewModel: GalleryViewModel = viewModel(
         factory = GalleryViewModel.factory(LocalContext.current.applicationContext as Application)
     ),
-    onMediaClick: (Int) -> Unit
+    onMediaClick: (Int) -> Unit,
+    gridSize: Int = 3
 ) {
     val mediaItems by viewModel.mediaItems.collectAsState()
     val mediaType by viewModel.mediaType.collectAsState()
@@ -167,6 +167,7 @@ fun GalleryScreen(
     val groupedMedia = remember(mediaItems) { groupMediaByDate(mediaItems) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             if (showSearch) {
                 OutlinedTextField(
@@ -174,9 +175,9 @@ fun GalleryScreen(
                     onValueChange = { viewModel.setSearchQuery(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = { Text("Tìm kiếm ảnh/video...") },
+                        .padding(top = 12.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
+                        .windowInsetsPadding(WindowInsets.statusBars),
+                    placeholder = { Text("Tim kiem anh/video...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
@@ -184,7 +185,7 @@ fun GalleryScreen(
                                 showSearch = false
                                 viewModel.setSearchQuery("")
                             }) {
-                                Icon(Icons.Default.Close, contentDescription = "Đóng")
+                                Icon(Icons.Default.Close, contentDescription = "Dong")
                             }
                         }
                     },
@@ -195,22 +196,22 @@ fun GalleryScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            "Thư viện",
-                            style = MaterialTheme.typography.headlineMedium
+                            "Thu vien",
+                            style = MaterialTheme.typography.titleLarge
                         )
                     },
                     actions = {
                         if (isSelectionMode) {
                             IconButton(onClick = { viewModel.clearSelection() }) {
-                                Icon(Icons.Default.Close, contentDescription = "Hủy chọn")
+                                Icon(Icons.Default.Close, contentDescription = "Huy chon")
                             }
                         } else {
                             IconButton(onClick = { showSearch = true }) {
-                                Icon(Icons.Default.Search, contentDescription = "Tìm kiếm")
+                                Icon(Icons.Default.Search, contentDescription = "Tim kiem")
                             }
                             Box {
                                 IconButton(onClick = { showMediaTypeMenu = true }) {
-                                    Icon(Icons.Default.FilterList, contentDescription = "Bộ lọc")
+                                    Icon(Icons.Default.FilterList, contentDescription = "Bo loc")
                                 }
                                 MediaTypeDropdownMenu(
                                     expanded = showMediaTypeMenu,
@@ -236,16 +237,16 @@ fun GalleryScreen(
         if (mediaItems.isEmpty()) {
             EmptyStateView(
                 modifier = Modifier.padding(paddingValues),
-                message = "Không tìm thấy ảnh/video nào",
+                message = "Khong tim thay anh/video nao",
                 icon = Icons.Outlined.PhotoLibrary
             )
         } else {
             Column(modifier = Modifier.padding(paddingValues)) {
-                // Filter chips in LazyRow
+                // Filter chips
                 FilterChipsLazyRow(
                     currentType = mediaType,
                     onTypeSelected = { viewModel.setMediaType(it) },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                 )
 
                 // Stats bar
@@ -266,7 +267,7 @@ fun GalleryScreen(
                     )
                 }
 
-                // Media grid with date grouping
+                // Media grid
                 GroupedMediaGrid(
                     groupedMedia = groupedMedia,
                     allItems = mediaItems,
@@ -274,7 +275,8 @@ fun GalleryScreen(
                     isSelectionMode = isSelectionMode,
                     onMediaClick = { index, _ -> onMediaClick(index) },
                     onMediaLongClick = { _, item -> viewModel.toggleSelection(item.id) },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    spanCount = gridSize
                 )
             }
         }
@@ -290,18 +292,18 @@ fun FilterChipsLazyRow(
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)
+        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 2.dp)
     ) {
         item {
             FilterChipItem(
-                label = "Tất cả",
+                label = "Tat ca",
                 selected = currentType == MediaStoreHelper.MediaType.ALL,
                 onClick = { onTypeSelected(MediaStoreHelper.MediaType.ALL) }
             )
         }
         item {
             FilterChipItem(
-                label = "Ảnh",
+                label = "Anh",
                 selected = currentType == MediaStoreHelper.MediaType.PHOTOS,
                 onClick = { onTypeSelected(MediaStoreHelper.MediaType.PHOTOS) },
                 icon = Icons.Outlined.Image
@@ -328,7 +330,7 @@ fun StatsBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 2.dp),
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
         tonalElevation = 1.dp
@@ -336,36 +338,45 @@ fun StatsBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             StatsItem(
-                emoji = "📸",
+                icon = Icons.Outlined.Image,
                 count = photoCount,
-                label = "ảnh"
+                label = "anh"
             )
             StatsDivider()
             StatsItem(
-                emoji = "🎬",
+                icon = Icons.Outlined.Videocam,
                 count = videoCount,
                 label = "video"
             )
             StatsDivider()
             StatsItem(
-                emoji = "📁",
+                icon = Icons.Outlined.Folder,
                 count = albumCount,
-                label = "nhóm"
+                label = "nhom"
             )
         }
     }
 }
 
 @Composable
-fun StatsItem(emoji: String, count: Int, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun StatsItem(icon: ImageVector, count: Int, label: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Text(
-            "$emoji ${formatNumber(count)} $label",
+            "${formatNumber(count)} $label",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -425,13 +436,13 @@ fun MediaTypeDropdownMenu(
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         DropdownMenuItem(
-            text = { Text("Mới nhất") },
+            text = { Text("Moi nhat") },
             onClick = { onTypeSelected(currentType) },
             leadingIcon = { Icon(Icons.Default.Schedule, contentDescription = null) }
         )
         Divider()
         DropdownMenuItem(
-            text = { Text("Ảnh") },
+            text = { Text("Anh") },
             onClick = { onTypeSelected(MediaStoreHelper.MediaType.PHOTOS) },
             leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) }
         )
@@ -463,16 +474,16 @@ fun SelectionInfoBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Đã chọn $selectedCount / $totalCount",
+                "Da chon $selectedCount / $totalCount",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = onSelectAll) {
-                    Text("Chọn tất cả", style = MaterialTheme.typography.labelMedium)
+                    Text("Chon tat ca", style = MaterialTheme.typography.labelMedium)
                 }
                 TextButton(onClick = onClear) {
-                    Text("Bỏ chọn", style = MaterialTheme.typography.labelMedium)
+                    Text("Bo chon", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -612,7 +623,6 @@ fun MediaGridItem(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Shimmer placeholder while loading
         SubcomposeAsyncImage(
             model = item.uri,
             contentDescription = item.name,
@@ -636,12 +646,10 @@ fun MediaGridItem(
             }
         )
 
-        // Video indicator
         if (item.isVideo) {
             VideoOverlay(item)
         }
 
-        // Selection overlay
         AnimatedVisibility(
             visible = isSelected || isSelectionMode,
             enter = fadeIn(animationSpec = tween(150)),
@@ -697,7 +705,6 @@ fun VideoOverlay(item: MediaItem) {
                 )
             )
     ) {
-        // Play icon
         Icon(
             Icons.Default.PlayCircle,
             contentDescription = null,
@@ -707,7 +714,6 @@ fun VideoOverlay(item: MediaItem) {
             tint = Color.White.copy(alpha = 0.9f)
         )
 
-        // Duration badge
         if (item.duration > 0) {
             Surface(
                 modifier = Modifier
@@ -725,7 +731,6 @@ fun VideoOverlay(item: MediaItem) {
             }
         }
 
-        // Video badge
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -794,6 +799,7 @@ fun LoadingView(modifier: Modifier = Modifier) {
 fun GalleryScreenWithNavigation(
     navController: NavController,
     onItemsLoaded: (List<MediaItem>) -> Unit,
+    gridSize: Int = 3,
     viewModel: GalleryViewModel = viewModel(
         factory = GalleryViewModel.factory(LocalContext.current.applicationContext as Application)
     )
@@ -810,6 +816,7 @@ fun GalleryScreenWithNavigation(
         viewModel = viewModel,
         onMediaClick = { index ->
             navController.navigate("viewer/gallery/$index")
-        }
+        },
+        gridSize = gridSize
     )
 }

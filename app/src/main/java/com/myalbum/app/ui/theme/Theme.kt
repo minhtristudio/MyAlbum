@@ -16,60 +16,50 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 // ==================== Dark Theme Colors ====================
-// Deep, rich dark surfaces with purple/indigo accents
 
 private val DarkBackground = Color(0xFF0E0E12)
 private val DarkSurface = Color(0xFF1A1A2E)
 private val DarkSurfaceVariant = Color(0xFF252540)
 
-// Primary: Vibrant purple/indigo
 private val DarkPrimary = Color(0xFFBB86FC)
 private val DarkOnPrimary = Color(0xFF21005D)
 private val DarkPrimaryContainer = Color(0xFF4A2D8A)
 private val DarkOnPrimaryContainer = Color(0xFFEADDFF)
 
-// Secondary: Soft lavender
 private val DarkSecondary = Color(0xFFCCC2DC)
 private val DarkOnSecondary = Color(0xFF332D41)
 private val DarkSecondaryContainer = Color(0xFF4A4458)
 private val DarkOnSecondaryContainer = Color(0xFFE8DEF8)
 
-// Tertiary: Warm rose
 private val DarkTertiary = Color(0xFFEFB8C8)
 private val DarkOnTertiary = Color(0xFF492532)
 private val DarkTertiaryContainer = Color(0xFF633B48)
 private val DarkOnTertiaryContainer = Color(0xFFFFD8E4)
 
-// Outline & borders
 private val DarkOutline = Color(0xFF4A4460)
 private val DarkOutlineVariant = Color(0xFF2C2C44)
 
 // ==================== Light Theme Colors ====================
-// Soft, warm tones with gentle purple accents
 
 private val LightBackground = Color(0xFFF8F5FF)
 private val LightSurface = Color(0xFFFFFBFE)
 private val LightSurfaceVariant = Color(0xFFF0E8F8)
 
-// Primary: Rich purple
 private val LightPrimary = Color(0xFF6750A4)
 private val LightOnPrimary = Color(0xFFFFFFFF)
 private val LightPrimaryContainer = Color(0xFFEADDFF)
 private val LightOnPrimaryContainer = Color(0xFF21005D)
 
-// Secondary: Warm rose
 private val LightSecondary = Color(0xFFB76E79)
 private val LightOnSecondary = Color(0xFFFFFFFF)
 private val LightSecondaryContainer = Color(0xFFFFD8E4)
 private val LightOnSecondaryContainer = Color(0xFF31111D)
 
-// Tertiary: Warm amber
 private val LightTertiary = Color(0xFF7D5260)
 private val LightOnTertiary = Color(0xFFFFFFFF)
 private val LightTertiaryContainer = Color(0xFFFFD8E4)
 private val LightOnTertiaryContainer = Color(0xFF31111D)
 
-// Outline & borders
 private val LightOutline = Color(0xFF79747E)
 private val LightOutlineVariant = Color(0xFFCAC4D0)
 

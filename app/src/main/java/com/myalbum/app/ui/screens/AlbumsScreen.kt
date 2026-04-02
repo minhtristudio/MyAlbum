@@ -1,8 +1,6 @@
 package com.myalbum.app.ui.screens
 
 import android.app.Application
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
@@ -65,9 +64,9 @@ import com.myalbum.app.viewmodel.AlbumViewModel
 import kotlin.math.min
 
 enum class AlbumSortOrder(val displayName: String) {
-    NAME("Tên"),
-    COUNT("Số lượng"),
-    RECENT("Gần đây")
+    NAME("Ten"),
+    COUNT("So luong"),
+    RECENT("Gan day")
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -86,17 +85,18 @@ fun AlbumListScreen(
         when (currentSort) {
             AlbumSortOrder.NAME -> albums.sortedBy { it.name.lowercase() }
             AlbumSortOrder.COUNT -> albums.sortedByDescending { it.count }
-            AlbumSortOrder.RECENT -> albums // Already sorted by most recent from MediaStore
+            AlbumSortOrder.RECENT -> albums
         }
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Album",
-                        style = MaterialTheme.typography.headlineMedium
+                        style = MaterialTheme.typography.titleLarge
                     )
                 },
                 actions = {
@@ -104,7 +104,7 @@ fun AlbumListScreen(
                         IconButton(onClick = { sortExpanded = true }) {
                             Icon(
                                 Icons.Default.Sort,
-                                contentDescription = "Sắp xếp"
+                                contentDescription = "Sap xep"
                             )
                         }
                         DropdownMenu(
@@ -119,7 +119,7 @@ fun AlbumListScreen(
                                         sortExpanded = false
                                     },
                                     leadingIcon = if (sortOrder == currentSort) {
-                                        { Text("✓") }
+                                        { Icon(Icons.Default.Check, contentDescription = null) }
                                     } else null
                                 )
                             }
@@ -128,14 +128,15 @@ fun AlbumListScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         }
     ) { paddingValues ->
         if (sortedAlbums.isEmpty()) {
             EmptyStateView(
                 modifier = Modifier.padding(paddingValues),
-                message = "Không có album nào",
+                message = "Khong co album nao",
                 icon = Icons.Outlined.PhotoAlbum
             )
         } else {
@@ -168,7 +169,6 @@ fun StaggeredAlbumCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Staggered height based on item count
     val heightRatio = when {
         album.count > 100 -> 1.2f
         album.count > 50 -> 1.1f
@@ -217,7 +217,6 @@ fun StaggeredAlbumCard(
                     }
                 }
 
-                // Gradient overlay at bottom
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -233,7 +232,6 @@ fun StaggeredAlbumCard(
                         )
                 )
 
-                // Count badge
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -262,91 +260,7 @@ fun StaggeredAlbumCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    "${album.count} mục",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AlbumCard(
-    album: AlbumInfo,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            ) {
-                if (album.coverUri != null) {
-                    AsyncImage(
-                        model = album.coverUri,
-                        contentDescription = album.name,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        filterQuality = FilterQuality.Medium
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Outlined.Folder,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Text(
-                        "${album.count}",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Text(
-                    album.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    "${album.count} mục",
+                    "${album.count} muc",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -361,7 +275,8 @@ fun AlbumMediaScreenWithNavigation(
     bucketId: String,
     bucketName: String,
     navController: NavController,
-    onItemsLoaded: (List<MediaItem>) -> Unit
+    onItemsLoaded: (List<MediaItem>) -> Unit,
+    gridSize: Int = 3
 ) {
     val app = LocalContext.current.applicationContext as Application
     val viewModel: AlbumViewModel = viewModel(factory = AlbumViewModel.factory(app))
@@ -383,7 +298,8 @@ fun AlbumMediaScreenWithNavigation(
         onMediaClick = { index ->
             navController.navigate("viewer/album/$index")
         },
-        onBackClick = { navController.navigateUp() }
+        onBackClick = { navController.navigateUp() },
+        gridSize = gridSize
     )
 }
 
@@ -393,9 +309,11 @@ fun AlbumMediaScreen(
     bucketName: String,
     mediaItems: List<MediaItem>,
     onMediaClick: (Int) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    gridSize: Int = 3
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
@@ -407,7 +325,7 @@ fun AlbumMediaScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            "${mediaItems.size} mục",
+                            "${mediaItems.size} muc",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -415,19 +333,20 @@ fun AlbumMediaScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Quay lại")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Quay lai")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         }
     ) { paddingValues ->
         if (mediaItems.isEmpty()) {
             EmptyStateView(
                 modifier = Modifier.padding(paddingValues),
-                message = "Album trống",
+                message = "Album trong",
                 icon = Icons.Outlined.PhotoAlbum
             )
         } else {
@@ -437,7 +356,8 @@ fun AlbumMediaScreen(
                 isSelectionMode = false,
                 onMediaClick = { index, _ -> onMediaClick(index) },
                 onMediaLongClick = { _, _ -> },
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(paddingValues),
+                spanCount = gridSize
             )
         }
     }
@@ -447,7 +367,8 @@ fun AlbumMediaScreen(
 @Composable
 fun FavoritesScreenWithNavigation(
     navController: NavController,
-    onItemsLoaded: (List<MediaItem>) -> Unit
+    onItemsLoaded: (List<MediaItem>) -> Unit,
+    gridSize: Int = 3
 ) {
     val app = LocalContext.current.applicationContext as Application
     val viewModel: AlbumViewModel = viewModel(factory = AlbumViewModel.factory(app))
@@ -463,7 +384,8 @@ fun FavoritesScreenWithNavigation(
         favorites = favorites,
         onMediaClick = { index ->
             navController.navigate("viewer/favorites/$index")
-        }
+        },
+        gridSize = gridSize
     )
 }
 
@@ -471,20 +393,22 @@ fun FavoritesScreenWithNavigation(
 @Composable
 fun FavoritesScreen(
     favorites: List<MediaItem>,
-    onMediaClick: (Int) -> Unit
+    onMediaClick: (Int) -> Unit,
+    gridSize: Int = 3
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            "Yêu thích",
-                            style = MaterialTheme.typography.headlineMedium
+                            "Yeu thich",
+                            style = MaterialTheme.typography.titleLarge
                         )
                         if (favorites.isNotEmpty()) {
                             Text(
-                                "${favorites.size} mục",
+                                "${favorites.size} muc",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -493,14 +417,15 @@ fun FavoritesScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         }
     ) { paddingValues ->
         if (favorites.isEmpty()) {
             EmptyStateView(
                 modifier = Modifier.padding(paddingValues),
-                message = "Chưa có ảnh yêu thích\nChạm giữ vào ảnh để thêm",
+                message = "Chua co anh yeu thich\nCham giu vao anh de them",
                 icon = Icons.Outlined.FavoriteBorder
             )
         } else {
@@ -510,7 +435,8 @@ fun FavoritesScreen(
                 isSelectionMode = false,
                 onMediaClick = { index, _ -> onMediaClick(index) },
                 onMediaLongClick = { _, _ -> },
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(paddingValues),
+                spanCount = gridSize
             )
         }
     }
