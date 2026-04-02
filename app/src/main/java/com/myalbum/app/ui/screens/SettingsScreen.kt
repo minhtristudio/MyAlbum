@@ -342,7 +342,7 @@ fun AboutCard(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("MyAlbum", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text("v5.1.0", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("v5.1.1", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Spacer(modifier = Modifier.height(20.dp))
 

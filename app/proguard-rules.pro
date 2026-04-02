@@ -1,4 +1,4 @@
-# ==================== MyAlbum v5.0.0 - ProGuard Rules ====================
+# ==================== MyAlbum v5.1.1 - ProGuard Rules ====================
 
 # ==================== Core ====================
 -keepattributes SourceFile,LineNumberTable
@@ -88,6 +88,15 @@
 -keepattributes EnclosingMethod
 -keepattributes InnerClasses
 -keepattributes Signature
+
+# ==================== Accompanist ====================
+-keep class com.google.accompanist.** { *; }
+-keepclassmembers class com.google.accompanist.** { *; }
+-dontwarn com.google.accompanist.**
+
+# ==================== App Application Class ====================
+-keep class com.myalbum.app.MyAlbumApp { *; }
+-keepclassmembers class com.myalbum.app.MyAlbumApp { *; }
 
 # ==================== Remove Logging in Release ====================
 -assumenosideeffects class android.util.Log {

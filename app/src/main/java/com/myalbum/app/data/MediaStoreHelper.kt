@@ -39,17 +39,25 @@ class MediaStoreHelper(private val context: Context) {
 
         for (uri in uris) {
             val isVideo = uri == MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            val projection = getProjection(isVideo)
-            val selection = buildSelection(query)
-            val selectionArgs = query?.let {
-                arrayOf("%${it.lowercase(Locale.getDefault())}%")
-            }
-
-            resolver.query(uri, projection, selection, selectionArgs, sortOrder.value)?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    val item = cursorToMediaItem(cursor, isVideo)
-                    items.add(item)
+            try {
+                val projection = getProjection(isVideo)
+                val selection = buildSelection(query)
+                val selectionArgs = query?.let {
+                    arrayOf("%${it.lowercase(Locale.getDefault())}%")
                 }
+
+                resolver.query(uri, projection, selection, selectionArgs, sortOrder.value)?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        try {
+                            val item = cursorToMediaItem(cursor, isVideo)
+                            items.add(item)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Skipping media item due to read error", e)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to query media from $uri", e)
             }
         }
 
@@ -66,50 +74,58 @@ class MediaStoreHelper(private val context: Context) {
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         )) {
             val isVideo = uri == MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            val projection = arrayOf(
-                MediaStore.MediaColumns.BUCKET_ID,
-                MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
-                MediaStore.MediaColumns._ID,
-                MediaStore.MediaColumns.DATE_ADDED
-            )
+            try {
+                val projection = arrayOf(
+                    MediaStore.MediaColumns.BUCKET_ID,
+                    MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
+                    MediaStore.MediaColumns._ID,
+                    MediaStore.MediaColumns.DATE_ADDED
+                )
 
-            resolver.query(uri, projection, null, null, "${MediaStore.MediaColumns.DATE_ADDED} DESC")
-                ?.use { cursor ->
+                resolver.query(uri, projection, null, null, "${MediaStore.MediaColumns.DATE_ADDED} DESC")
+                    ?.use { cursor ->
                     val bucketIdIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID)
                     val bucketNameIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME)
                     val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
 
                     while (cursor.moveToNext()) {
-                        val bucketId = cursor.getString(bucketIdIndex) ?: "unknown"
-                        val bucketName = cursor.getString(bucketNameIndex) ?: "Unknown"
-                        val id = cursor.getLong(idIndex)
-                        val itemUri = ContentUris.withAppendedId(uri, id)
+                        try {
+                            val bucketId = cursor.getString(bucketIdIndex) ?: "unknown"
+                            val bucketName = cursor.getString(bucketNameIndex) ?: "Unknown"
+                            val id = cursor.getLong(idIndex)
+                            val itemUri = ContentUris.withAppendedId(uri, id)
 
-                        // Track recent URIs for album cover grid
-                        val recentList = albumRecentUris.getOrPut(bucketId) { mutableListOf() }
-                        if (recentList.size < 4) recentList.add(itemUri)
+                            // Track recent URIs for album cover grid
+                            val recentList = albumRecentUris.getOrPut(bucketId) { mutableListOf() }
+                            if (recentList.size < 4) recentList.add(itemUri)
 
-                        val existing = albums[bucketId]
-                        if (existing != null) {
-                            val newVideoCount = if (isVideo) existing.videoCount + 1 else existing.videoCount
-                            albums[bucketId] = existing.copy(
-                                count = existing.count + 1,
-                                videoCount = newVideoCount,
-                                recentUris = recentList.toList()
-                            )
-                        } else {
-                            albums[bucketId] = AlbumInfo(
-                                bucketId = bucketId,
-                                name = bucketName,
-                                coverUri = itemUri,
-                                count = 1,
-                                isVideo = isVideo,
-                                videoCount = if (isVideo) 1 else 0,
-                                recentUris = recentList.toList()
-                            )
+                            val existing = albums[bucketId]
+                            if (existing != null) {
+                                val newVideoCount = if (isVideo) existing.videoCount + 1 else existing.videoCount
+                                albums[bucketId] = existing.copy(
+                                    count = existing.count + 1,
+                                    videoCount = newVideoCount,
+                                    recentUris = recentList.toList()
+                                )
+                            } else {
+                                albums[bucketId] = AlbumInfo(
+                                    bucketId = bucketId,
+                                    name = bucketName,
+                                    coverUri = itemUri,
+                                    count = 1,
+                                    isVideo = isVideo,
+                                    videoCount = if (isVideo) 1 else 0,
+                                    recentUris = recentList.toList()
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Skipping album entry due to read error", e)
                         }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to query albums from $uri", e)
+            }
         }
 
         emit(albums.values.sortedByDescending { it.count })
@@ -124,16 +140,24 @@ class MediaStoreHelper(private val context: Context) {
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         )) {
             val isVideo = uri == MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            val projection = getProjection(isVideo)
-            val selection = "${MediaStore.MediaColumns.BUCKET_ID} = ?"
-            val selectionArgs = arrayOf(bucketId)
+            try {
+                val projection = getProjection(isVideo)
+                val selection = "${MediaStore.MediaColumns.BUCKET_ID} = ?"
+                val selectionArgs = arrayOf(bucketId)
 
-            resolver.query(uri, projection, selection, selectionArgs, "${MediaStore.MediaColumns.DATE_ADDED} DESC")
-                ?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        items.add(cursorToMediaItem(cursor, isVideo))
+                resolver.query(uri, projection, selection, selectionArgs, "${MediaStore.MediaColumns.DATE_ADDED} DESC")
+                    ?.use { cursor ->
+                        while (cursor.moveToNext()) {
+                            try {
+                                items.add(cursorToMediaItem(cursor, isVideo))
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Skipping album media item", e)
+                            }
+                        }
                     }
-                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to query album media from $uri", e)
+            }
         }
 
         emit(items.sortedByDescending { it.dateAdded })
@@ -149,16 +173,24 @@ class MediaStoreHelper(private val context: Context) {
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             )) {
                 val isVideo = uri == MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                val projection = getProjection(isVideo)
-                val selection = "${MediaStore.MediaColumns.IS_FAVORITE} = ?"
-                val selectionArgs = arrayOf("1")
+                try {
+                    val projection = getProjection(isVideo)
+                    val selection = "${MediaStore.MediaColumns.IS_FAVORITE} = ?"
+                    val selectionArgs = arrayOf("1")
 
-                resolver.query(uri, projection, selection, selectionArgs, "${MediaStore.MediaColumns.DATE_ADDED} DESC")
-                    ?.use { cursor ->
-                        while (cursor.moveToNext()) {
-                            items.add(cursorToMediaItem(cursor, isVideo))
+                    resolver.query(uri, projection, selection, selectionArgs, "${MediaStore.MediaColumns.DATE_ADDED} DESC")
+                        ?.use { cursor ->
+                            while (cursor.moveToNext()) {
+                                try {
+                                    items.add(cursorToMediaItem(cursor, isVideo))
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "Skipping favorite item", e)
+                                }
+                            }
                         }
-                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to query favorites from $uri", e)
+                }
             }
 
             emit(items.sortedByDescending { it.dateAdded })

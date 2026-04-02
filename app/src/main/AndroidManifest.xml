@@ -17,6 +17,7 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <application
+        android:name=".MyAlbumApp"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"

@@ -299,7 +299,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
             )
             Text(
-                "v5.1.0",
+                "v5.1.1",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
             )

@@ -1,6 +1,7 @@
 package com.myalbum.app.ui.screens
 
 import android.app.Application
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -63,14 +64,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,8 +84,11 @@ import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
 import com.myalbum.app.data.MediaItem
 import com.myalbum.app.data.MediaStoreHelper
+import com.myalbum.app.data.VideoThumbnailUtil
 import com.myalbum.app.ui.theme.AppColors
 import com.myalbum.app.viewmodel.GalleryViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -559,6 +556,11 @@ fun GroupedMediaGrid(
 ) {
     val gridState = rememberLazyGridState()
 
+    // Pre-compute index map for O(1) lookup instead of O(n) indexOf
+    val indexMap = remember(allItems) {
+        allItems.withIndex().associateBy { it.value.id }.mapValues { it.value.index }
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(spanCount),
         modifier = modifier,
@@ -575,7 +577,7 @@ fun GroupedMediaGrid(
                 items = items,
                 key = { it.id }
             ) { item ->
-                val globalIndex = allItems.indexOf(item)
+                val globalIndex = indexMap[item.id] ?: allItems.indexOf(item)
                 MediaGridItem(
                     item = item,
                     isSelected = selectedItems.contains(item.id),
@@ -678,37 +680,43 @@ fun MediaGridItem(
             ),
         contentAlignment = Alignment.Center
     ) {
+        val context = LocalContext.current
+
+        // For videos: generate thumbnail via produceState, then load via Coil
+        val videoThumbnailUri by produceState<Uri?>(null, item.uri) {
+            if (item.isVideo) {
+                value = withContext(Dispatchers.IO) {
+                    VideoThumbnailUtil.getOrCreateThumbnail(context, item.uri)
+                }
+            }
+        }
+
         // Image/Video thumbnail
-        val imageModel = if (item.isVideo && item.thumbnailUri != null) {
-            item.thumbnailUri
+        val imageModel: Any = if (item.isVideo && videoThumbnailUri != null) {
+            videoThumbnailUri!!
+        } else if (item.isVideo) {
+            // Video thumbnail not yet ready or failed
+            null
         } else {
             item.uri
         }
 
-        SubcomposeAsyncImage(
-            model = imageModel,
-            contentDescription = item.name,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            filterQuality = FilterQuality.Medium,
-            loading = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
-            },
-            error = {
-                // Fallback for videos that fail to load - try contentUri directly
-                if (item.isVideo) {
-                    SubcomposeAsyncImage(
-                        model = item.uri,
-                        contentDescription = item.name,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        filterQuality = FilterQuality.Low,
+        if (imageModel != null) {
+            SubcomposeAsyncImage(
+                model = imageModel,
+                contentDescription = item.name,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Medium,
+                loading = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                     )
-                } else {
+                },
+                error = {
+                    // Safe fallback - just show placeholder, never retry
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -716,15 +724,30 @@ fun MediaGridItem(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Outlined.Image,
+                            if (item.isVideo) Icons.Default.Videocam else Icons.Outlined.Image,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                         )
                     }
                 }
+            )
+        } else {
+            // Loading video thumbnail or video thumbnail failed
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Videocam,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                )
             }
-        )
+        }
 
         // Video overlay with play icon, duration, size
         if (item.isVideo) {
