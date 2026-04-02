@@ -114,10 +114,10 @@ class MainActivity : ComponentActivity() {
                     val mode = getThemeMode(applicationContext)
                     val size = getGridSize(applicationContext)
                     withContext(Dispatchers.Main) {
-                        darkTheme = when (mode) {
-                            "dark" -> true
-                            "light" -> false
-                            else -> isSystemInDarkTheme()
+                        when (mode) {
+                            "dark" -> darkTheme = true
+                            "light" -> darkTheme = false
+                            // "system" or null: keep the initial value from isSystemInDarkTheme()
                         }
                         gridSize = size
                     }
