@@ -102,7 +102,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             // Dark theme state
-            var darkTheme by remember { mutableStateOf(isSystemInDarkTheme()) }
+            val systemIsDark = isSystemInDarkTheme()
+            var darkTheme by remember { mutableStateOf(systemIsDark) }
 
             // Grid size state
             var gridSize by remember { mutableIntStateOf(3) }
