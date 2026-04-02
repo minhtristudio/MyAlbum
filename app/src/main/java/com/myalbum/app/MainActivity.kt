@@ -89,6 +89,7 @@ import com.myalbum.app.ui.screens.GalleryScreenWithNavigation
 import com.myalbum.app.ui.screens.SettingsScreen
 import com.myalbum.app.ui.screens.ViewerScreen
 import com.myalbum.app.ui.theme.MyAlbumTheme
+import com.myalbum.app.ui.theme.AppColors
 import kotlinx.coroutines.Dispatchers
 import com.myalbum.app.ui.screens.getThemeMode
 import com.myalbum.app.ui.screens.getGridSize
@@ -101,14 +102,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            // Dark theme state
             val systemIsDark = isSystemInDarkTheme()
             var darkTheme by remember { mutableStateOf(systemIsDark) }
-
-            // Grid size state
             var gridSize by remember { mutableIntStateOf(3) }
 
-            // Read saved settings on first composition
             LaunchedEffect(Unit) {
                 withContext(Dispatchers.IO) {
                     val mode = getThemeMode(applicationContext)
@@ -117,7 +114,6 @@ class MainActivity : ComponentActivity() {
                         when (mode) {
                             "dark" -> darkTheme = true
                             "light" -> darkTheme = false
-                            // "system" or null: keep the initial value from isSystemInDarkTheme()
                         }
                         gridSize = size
                     }
@@ -184,18 +180,18 @@ class MainActivity : ComponentActivity() {
 fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition()
     val scale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
+        initialValue = 0.85f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
+            animation = tween(1400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         )
     )
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
+        initialValue = 0.6f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
+            animation = tween(1400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         )
     )
@@ -206,9 +202,9 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF0E0E12),
-                        Color(0xFF1A1A2E),
-                        Color(0xFF16213E)
+                        Color(0xFF08080F),
+                        Color(0xFF10101E),
+                        Color(0xFF0C1528)
                     )
                 )
             )
@@ -220,17 +216,19 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Premium logo with animated glow
             Box(
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(130.dp)
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                AppColors.GradientStart.copy(alpha = 0.4f),
+                                AppColors.GradientMid.copy(alpha = 0.15f),
                                 Color.Transparent
                             )
                         ),
-                        shape = RoundedCornerShape(60.dp)
+                        shape = RoundedCornerShape(65.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -238,82 +236,88 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                     Icons.Outlined.PhotoLibrary,
                     contentDescription = null,
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(68.dp)
                         .scale(scale)
                         .graphicsLayer { this.alpha = alpha },
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = Color.White
                 )
             }
+
             Spacer(modifier = Modifier.height(40.dp))
+
             Text(
                 "MyAlbum",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
+                letterSpacing = (-0.5).dp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                "Ung dung can quyen truy cap thu vien anh\nva video tren thiet bi cua ban.",
+                "Album anh & video dang cap nhat",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.7f),
+                color = Color.White.copy(alpha = 0.55f),
                 textAlign = TextAlign.Center
             )
+
             Spacer(modifier = Modifier.height(48.dp))
+
+            // Premium button with gradient
             Button(
                 onClick = onRequestPermissions,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(54.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.Transparent
                 ),
-                shape = RoundedCornerShape(16.dp)
+                contentPadding = androidx.compose.foundation.layout.PaddingValues()
             ) {
-                Icon(Icons.Default.Security, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "Cap quyen truy cap",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-
-            Spacer(modifier = Modifier.height(60.dp))
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Surface(
+                Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
+                        .fillMaxSize()
                         .background(
-                            Color.White.copy(alpha = 0.05f)
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    AppColors.GradientStart,
+                                    AppColors.GradientEnd
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
                         ),
-                    color = Color.Transparent
+                    contentAlignment = Alignment.Center
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(
-                            Icons.Default.PhotoLibrary,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        )
-                        Text(
-                            "v3.2.0",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.5f)
-                        )
+                        Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.White)
+                        Text("Cap quyen truy cap", style = MaterialTheme.typography.titleMedium, color = Color.White)
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "Created by MT Studio",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.4f)
-                )
+            }
+
+            Spacer(modifier = Modifier.height(80.dp))
+
+            // Branding
+            Surface(
+                modifier = Modifier.clip(RoundedCornerShape(24.dp)),
+                color = Color.White.copy(alpha = 0.05f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White.copy(alpha = 0.5f))
+                        Text("v4.0.0", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.45f))
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("Created by MT Studio", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.35f))
+                    Text("Protected by VenCA", style = MaterialTheme.typography.labelSmall, color = AppColors.GradientStart.copy(alpha = 0.5f))
+                }
             }
         }
     }
@@ -362,29 +366,31 @@ fun MainNavigation(
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
                 NavigationBar(
-                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars),
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                    tonalElevation = 8.dp
                 ) {
                     bottomNavItems.forEach { item ->
                         NavigationBarItem(
                             icon = {
                                 Icon(
                                     if (currentRoute == item.route) item.selectedIcon else item.icon,
-                                    contentDescription = item.label
+                                    contentDescription = item.label,
+                                    modifier = Modifier.size(24.dp)
                                 )
                             },
                             label = {
                                 Text(
                                     item.label,
-                                    style = MaterialTheme.typography.labelSmall
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (currentRoute == item.route) FontWeight.SemiBold else FontWeight.Normal
                                 )
                             },
                             selected = currentRoute == item.route,
                             onClick = {
                                 if (currentRoute != item.route) {
                                     navController.navigate(item.route) {
-                                        popUpTo("gallery") {
-                                            saveState = true
-                                        }
+                                        popUpTo("gallery") { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true
                                     }

@@ -25,8 +25,8 @@ android {
         applicationId = "com.myalbum.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 5
-        versionName = "3.2.0"
+        versionCode = 6
+        versionName = "4.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

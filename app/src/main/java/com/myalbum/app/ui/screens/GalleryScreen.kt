@@ -509,9 +509,9 @@ fun GroupedMediaGrid(
         columns = GridCells.Fixed(spanCount),
         modifier = modifier,
         state = gridState,
-        contentPadding = PaddingValues(2.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        contentPadding = PaddingValues(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         groupedMedia.forEach { (dateHeader, items) ->
             item(span = { GridItemSpan(spanCount) }) {
@@ -548,9 +548,9 @@ fun MediaGrid(
     LazyVerticalGrid(
         columns = GridCells.Fixed(spanCount),
         modifier = modifier,
-        contentPadding = PaddingValues(2.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        contentPadding = PaddingValues(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         items(
             items = items,
@@ -617,7 +617,7 @@ fun MediaGridItem(
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(8.dp))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick

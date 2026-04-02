@@ -15,15 +15,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// ==================== Dark Theme Colors ====================
+// ==================== Dark Theme Colors - Premium Deep Blue ====================
 
-private val DarkBackground = Color(0xFF0E0E12)
-private val DarkSurface = Color(0xFF1A1A2E)
-private val DarkSurfaceVariant = Color(0xFF252540)
+private val DarkBackground = Color(0xFF0A0A14)
+private val DarkSurface = Color(0xFF12121E)
+private val DarkSurfaceVariant = Color(0xFF1C1C30)
+private val DarkSurfaceContainer = Color(0xFF1A1A2E)
+private val DarkSurfaceContainerHigh = Color(0xFF252540)
 
 private val DarkPrimary = Color(0xFFBB86FC)
 private val DarkOnPrimary = Color(0xFF21005D)
-private val DarkPrimaryContainer = Color(0xFF4A2D8A)
+private val DarkPrimaryContainer = Color(0xFF3D2278)
 private val DarkOnPrimaryContainer = Color(0xFFEADDFF)
 
 private val DarkSecondary = Color(0xFFCCC2DC)
@@ -36,14 +38,14 @@ private val DarkOnTertiary = Color(0xFF492532)
 private val DarkTertiaryContainer = Color(0xFF633B48)
 private val DarkOnTertiaryContainer = Color(0xFFFFD8E4)
 
-private val DarkOutline = Color(0xFF4A4460)
-private val DarkOutlineVariant = Color(0xFF2C2C44)
+private val DarkOutline = Color(0xFF3E3A56)
+private val DarkOutlineVariant = Color(0xFF2A2840)
 
-// ==================== Light Theme Colors ====================
+// ==================== Light Theme Colors - Premium Clean ====================
 
-private val LightBackground = Color(0xFFF8F5FF)
+private val LightBackground = Color(0xFFF5F3FF)
 private val LightSurface = Color(0xFFFFFBFE)
-private val LightSurfaceVariant = Color(0xFFF0E8F8)
+private val LightSurfaceVariant = Color(0xFFEDE6F7)
 
 private val LightPrimary = Color(0xFF6750A4)
 private val LightOnPrimary = Color(0xFFFFFFFF)

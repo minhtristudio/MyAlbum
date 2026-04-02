@@ -22,9 +22,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -34,11 +38,10 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Divider
@@ -61,6 +64,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
@@ -95,7 +100,8 @@ fun ViewerScreen(
     val context = LocalContext.current
     val activity = context as? android.app.Activity
 
-    var isSystemUiVisible by remember { mutableStateOf(true) }
+    // Start in immersive mode (no system bars)
+    var isSystemUiVisible by remember { mutableStateOf(false) }
     var currentPage by remember { mutableIntStateOf(initialIndex) }
     var isSlideShowActive by remember { mutableStateOf(false) }
     var showInfoSheet by remember { mutableStateOf(false) }
@@ -127,6 +133,7 @@ fun ViewerScreen(
         }
     }
 
+    // Control system bars visibility
     LaunchedEffect(isSystemUiVisible) {
         activity?.window?.let { window ->
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
@@ -193,8 +200,15 @@ fun ViewerScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Xoa media") },
-            text = { Text("Ban co chac muon xoa \"${items.getOrNull(currentPage)?.name}\"? Hanh dong khong the hoan tac.") },
+            title = {
+                Text("Xoa media", fontWeight = FontWeight.SemiBold)
+            },
+            text = {
+                Text(
+                    "Ban co chac muon xoa \"${items.getOrNull(currentPage)?.name}\"?\n\nHanh dong khong the hoan tac.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -202,17 +216,11 @@ fun ViewerScreen(
                         val itemToDelete = items.getOrNull(currentPage) ?: return@TextButton
                         val contentUri = itemToDelete.contentUri
                         try {
-                            val rowsDeleted = context.contentResolver.delete(
-                                contentUri,
-                                null,
-                                null
-                            )
+                            val rowsDeleted = context.contentResolver.delete(contentUri, null, null)
                             if (rowsDeleted > 0) {
                                 Toast.makeText(context, "Da xoa thanh cong", Toast.LENGTH_SHORT).show()
                                 onItemDeleted?.invoke(currentPage)
-                                if (items.size <= 1) {
-                                    onBack()
-                                }
+                                if (items.size <= 1) onBack()
                             } else {
                                 Toast.makeText(context, "Khong the xoa", Toast.LENGTH_SHORT).show()
                             }
@@ -221,12 +229,12 @@ fun ViewerScreen(
                         }
                     }
                 ) {
-                    Text("Xoa", color = AppColors.DangerRed)
+                    Text("Xoa", color = AppColors.DangerRed, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Huy")
+                    Text("Huy", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -237,6 +245,7 @@ fun ViewerScreen(
             .fillMaxSize()
             .background(Color.Black)
     ) {
+        // Full-screen pager
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
@@ -250,16 +259,28 @@ fun ViewerScreen(
             )
         }
 
-        // Top bar
+        // ==================== Top Bar with Status Bar Padding ====================
         AnimatedVisibility(
             visible = isSystemUiVisible,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
-            modifier = Modifier.align(Alignment.TopCenter)
+            enter = fadeIn(tween(200)) + slideInVertically(initialOffsetY = { -it }),
+            exit = fadeOut(tween(150)) + slideOutVertically(targetOffsetY = { -it }),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .windowInsetsPadding(WindowInsets.statusBars)
         ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.Black.copy(alpha = 0.5f)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.8f),
+                                Color.Black.copy(alpha = 0.4f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+                    .padding(horizontal = 2.dp, vertical = 4.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -267,14 +288,21 @@ fun ViewerScreen(
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Quay lai",
-                            tint = Color.White
-                        )
+                    // Back button with glass background
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.15f)
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Quay lai",
+                                tint = Color.White
+                            )
+                        }
                     }
 
+                    // Title + subtitle
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -287,146 +315,109 @@ fun ViewerScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.White,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                fontWeight = FontWeight.Medium
                             )
                             Text(
                                 "${currentPage + 1} / ${items.size}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f)
+                                color = Color.White.copy(alpha = 0.65f)
                             )
                         }
                     }
 
-                    IconButton(onClick = {
-                        isSlideShowActive = !isSlideShowActive
-                        isSystemUiVisible = false
-                    }) {
-                        Icon(
-                            if (isSlideShowActive) Icons.Default.Close else Icons.Default.Repeat,
-                            contentDescription = "Trinh chieu",
-                            tint = if (isSlideShowActive) AppColors.SlideShowActive else Color.White
-                        )
-                    }
-
-                    IconButton(onClick = { /* Toggle favorite */ }) {
-                        val isFav = items.getOrNull(currentPage)?.isFavorite == true
-                        Icon(
-                            if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Yeu thich",
-                            tint = if (isFav) AppColors.FavoriteActive else Color.White
-                        )
-                    }
-
-                    IconButton(onClick = {
-                        val shareItem = items.getOrNull(currentPage) ?: return@IconButton
-                        val shareIntent = android.content.Intent().apply {
-                            action = android.content.Intent.ACTION_SEND
-                            type = shareItem.mimeType
-                            putExtra(android.content.Intent.EXTRA_STREAM, shareItem.uri)
-                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    // Action buttons with glass backgrounds
+                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
+                        IconButton(onClick = {
+                            isSlideShowActive = !isSlideShowActive
+                            isSystemUiVisible = false
+                        }) {
+                            Icon(
+                                if (isSlideShowActive) Icons.Default.Close else Icons.Default.Repeat,
+                                contentDescription = "Trinh chieu",
+                                tint = if (isSlideShowActive) AppColors.SlideShowActive else Color.White
+                            )
                         }
-                        context.startActivity(android.content.Intent.createChooser(shareIntent, "Chia se"))
-                    }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = "Chia se",
-                            tint = Color.White
-                        )
                     }
 
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Xoa",
-                            tint = Color.White
-                        )
+                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
+                        IconButton(onClick = { /* Toggle favorite */ }) {
+                            val isFav = items.getOrNull(currentPage)?.isFavorite == true
+                            Icon(
+                                if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Yeu thich",
+                                tint = if (isFav) AppColors.FavoriteActive else Color.White
+                            )
+                        }
                     }
 
-                    IconButton(onClick = { showInfoSheet = true }) {
-                        Icon(
-                            Icons.Default.Info,
-                            contentDescription = "Thong tin",
-                            tint = Color.White
-                        )
+                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
+                        IconButton(onClick = {
+                            val shareItem = items.getOrNull(currentPage) ?: return@IconButton
+                            val shareIntent = android.content.Intent().apply {
+                                action = android.content.Intent.ACTION_SEND
+                                type = shareItem.mimeType
+                                putExtra(android.content.Intent.EXTRA_STREAM, shareItem.uri)
+                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Chia se"))
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Chia se", tint = Color.White)
+                        }
+                    }
+
+                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Xoa", tint = Color.White)
+                        }
+                    }
+
+                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
+                        IconButton(onClick = { showInfoSheet = true }) {
+                            Icon(Icons.Default.Info, contentDescription = "Thong tin", tint = Color.White)
+                        }
                     }
                 }
             }
         }
 
-        // Page indicator dots
+        // ==================== Bottom Page Indicator ====================
         AnimatedVisibility(
             visible = isSystemUiVisible && !isSlideShowActive,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter)
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(150)),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
             PageIndicator(
                 currentPage = currentPage,
                 totalPages = items.size,
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             )
         }
 
-        // Video indicator badge
-        AnimatedVisibility(
-            visible = isSystemUiVisible && items.getOrNull(currentPage)?.isVideo == true,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopStart)
-        ) {
-            Surface(
-                modifier = Modifier.padding(start = 8.dp, top = 60.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = Color.Black.copy(alpha = 0.6f)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Text(
-                        "Video",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White
-                    )
-                }
-            }
-        }
-
-        // Slideshow indicator
+        // Slideshow indicator badge
         AnimatedVisibility(
             visible = isSlideShowActive,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopEnd)
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .windowInsetsPadding(WindowInsets.statusBars)
         ) {
             Surface(
-                modifier = Modifier.padding(16.dp),
-                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.padding(end = 12.dp, top = 4.dp),
+                shape = RoundedCornerShape(24.dp),
                 color = AppColors.SlideShowActive.copy(alpha = 0.9f)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(
-                        Icons.Default.Repeat,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        "Trinh chieu",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White
-                    )
+                    Icon(Icons.Default.Repeat, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Text("Trinh chieu", style = MaterialTheme.typography.labelSmall, color = Color.White, fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -435,10 +426,7 @@ fun ViewerScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InfoBottomSheet(
-    item: AppMediaItem,
-    onDismiss: () -> Unit
-) {
+fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
@@ -452,12 +440,7 @@ fun InfoBottomSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
-            Text(
-                "Thong tin chi tiet",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Text("Thong tin chi tiet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(16.dp))
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
@@ -466,10 +449,7 @@ fun InfoBottomSheet(
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.width > 0 && item.height > 0) {
-                InfoRow(
-                    label = "Do phan giai",
-                    value = "${item.width} x ${item.height} px"
-                )
+                InfoRow(label = "Do phan giai", value = "${item.width} x ${item.height} px")
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
@@ -479,9 +459,8 @@ fun InfoBottomSheet(
             val dateStr = try {
                 val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
                 sdf.format(Date(item.dateAdded * 1000L))
-            } catch (e: Exception) {
-                "${item.dateAdded}"
-            }
+            } catch (e: Exception) { "${item.dateAdded}" }
+
             InfoRow(label = "Ngay them", value = dateStr)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -492,11 +471,7 @@ fun InfoBottomSheet(
 
             InfoRow(label = "Loai file", value = item.mimeType)
             Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-            InfoRow(
-                label = "Loai media",
-                value = if (item.isVideo) "Video" else "Anh"
-            )
+            InfoRow(label = "Loai media", value = if (item.isVideo) "Video" else "Anh")
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.bucketName.isNotEmpty()) {
@@ -512,74 +487,77 @@ fun InfoBottomSheet(
 @Composable
 fun InfoRow(label: String, value: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
+            value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f), textAlign = TextAlign.End
         )
     }
 }
 
 @Composable
-fun PageIndicator(
-    currentPage: Int,
-    totalPages: Int,
-    modifier: Modifier = Modifier
-) {
+fun PageIndicator(currentPage: Int, totalPages: Int, modifier: Modifier = Modifier) {
     if (totalPages <= 1) return
 
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = modifier
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))
+                )
+            )
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        val maxDots = 7
-        val dotsToShow = if (totalPages <= maxDots) {
-            (0 until totalPages).toList()
-        } else {
-            val start = (currentPage - 3).coerceAtLeast(0)
-            val end = (currentPage + 3).coerceAtMost(totalPages - 1)
-            (start..end).toList()
-        }
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = Color.Black.copy(alpha = 0.5f)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val maxDots = 7
+                val dotsToShow = if (totalPages <= maxDots) {
+                    (0 until totalPages).toList()
+                } else {
+                    val start = (currentPage - 3).coerceAtLeast(0)
+                    val end = (currentPage + 3).coerceAtMost(totalPages - 1)
+                    (start..end).toList()
+                }
 
-        for (i in dotsToShow) {
-            val isSelected = i == currentPage
-            val dotSize by animateFloatAsState(
-                targetValue = if (isSelected) 8f else 5f,
-                animationSpec = tween(200)
-            )
-            Box(
-                modifier = Modifier
-                    .size(dotSize.dp)
-                    .background(
-                        color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f),
-                        shape = CircleShape
+                for (i in dotsToShow) {
+                    val isSelected = i == currentPage
+                    val dotSize by animateFloatAsState(
+                        targetValue = if (isSelected) 10f else 6f,
+                        animationSpec = tween(200)
                     )
-            )
-        }
+                    Box(
+                        modifier = Modifier
+                            .size(dotSize.dp)
+                            .background(
+                                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f),
+                                shape = CircleShape
+                            )
+                    )
+                }
 
-        if (totalPages > maxDots) {
-            Text(
-                "${currentPage + 1}/${totalPages}",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.7f),
-                modifier = Modifier.padding(start = 4.dp)
-            )
+                if (totalPages > maxDots) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        "${currentPage + 1}/${totalPages}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
         }
     }
 }
@@ -592,28 +570,15 @@ fun ViewerPage(
     modifier: Modifier = Modifier
 ) {
     if (item.isVideo && exoPlayer != null) {
-        VideoPlayerView(
-            exoPlayer = exoPlayer,
-            onTap = onTap,
-            modifier = modifier.fillMaxSize()
-        )
+        VideoPlayerView(exoPlayer = exoPlayer, onTap = onTap, modifier = modifier.fillMaxSize())
     } else {
-        PhotoViewerPage(
-            item = item,
-            onTap = onTap,
-            modifier = modifier
-        )
+        PhotoViewerPage(item = item, onTap = onTap, modifier = modifier)
     }
 }
 
 @Composable
-fun VideoPlayerView(
-    exoPlayer: ExoPlayer,
-    onTap: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun VideoPlayerView(exoPlayer: ExoPlayer, onTap: () -> Unit, modifier: Modifier = Modifier) {
     val currentOnTap = rememberUpdatedState(onTap)
-
     Box(modifier = modifier) {
         AndroidView(
             factory = { ctx ->
@@ -626,16 +591,11 @@ fun VideoPlayerView(
                     var startY = 0f
                     setOnTouchListener { _, event ->
                         when (event.action) {
-                            MotionEvent.ACTION_DOWN -> {
-                                startX = event.rawX
-                                startY = event.rawY
-                            }
+                            MotionEvent.ACTION_DOWN -> { startX = event.rawX; startY = event.rawY }
                             MotionEvent.ACTION_UP -> {
                                 val dx = Math.abs(event.rawX - startX)
                                 val dy = Math.abs(event.rawY - startY)
-                                if (dx < 10f && dy < 10f) {
-                                    currentOnTap.value()
-                                }
+                                if (dx < 10f && dy < 10f) currentOnTap.value()
                             }
                         }
                         false
@@ -648,11 +608,7 @@ fun VideoPlayerView(
 }
 
 @Composable
-fun PhotoViewerPage(
-    item: AppMediaItem,
-    onTap: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun PhotoViewerPage(item: AppMediaItem, onTap: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -665,6 +621,21 @@ fun PhotoViewerPage(
                 .clickable { onTap() },
             contentScale = ContentScale.Fit,
             filterQuality = FilterQuality.High
+        )
+
+        // Premium vignette overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawWithContent {
+                    drawContent()
+                    val vignetteBrush = Brush.radialGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.25f)),
+                        center = center,
+                        radius = size.width * 0.75f
+                    )
+                    drawRect(brush = vignetteBrush)
+                }
         )
     }
 }

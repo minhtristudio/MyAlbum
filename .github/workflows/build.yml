@@ -60,20 +60,31 @@ jobs:
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v3.2.0
-        name: MyAlbum v3.2.0
+        tag_name: v4.0.0
+        name: MyAlbum v4.0.0 - Premium Edition
         body: |
-          ## MyAlbum v3.2.0
+          ## MyAlbum v4.0.0 - Premium Edition
+
+          ### UI Upgrade:
+          - Complete premium design overhaul with glassmorphism effects
+          - Deep blue dark theme with improved color palette
+          - Rounded corners on grid items (8dp)
+          - Premium gradient buttons and navigation
+          - Better typography and spacing throughout
 
           ### Bug Fixes:
-          - Fixed critical compile error preventing app from building
-          - Fixed photo swipe (left/right) in viewer - now works for both photos and videos
-          - Fixed dark mode toggle and DataStore persistence
-          - Fixed column count setting and DataStore persistence
-          - Fixed status bar inset handling on all screens
-          - Replaced gesture-conflicting combinedClickable with clickable for photos
-          - Added automatic GitHub Release creation in CI/CD
+          - Fixed status bar covering viewer title and action buttons
+          - Viewer now starts in immersive mode
+          - Glass background on viewer action buttons
+          - Premium page indicator with pill design
 
+          ### VenCA Security:
+          - New VenCA DEX protection module
+          - Enhanced ProGuard/R8 obfuscation rules
+          - APK signature integrity verification
+          - Disabled backup for code protection
+
+          Protected by VenCA v1.0
           Created by MT Studio
         files: app/build/outputs/apk/release/*.apk
         draft: false
