@@ -25,6 +25,9 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
     private val _mediaType = MutableStateFlow(MediaStoreHelper.MediaType.ALL)
     val mediaType: StateFlow<MediaStoreHelper.MediaType> = _mediaType
 
+    private val _sortOrder = MutableStateFlow(MediaStoreHelper.SortOrder.DATE_DESC)
+    val sortOrder: StateFlow<MediaStoreHelper.SortOrder> = _sortOrder
+
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
@@ -39,13 +42,15 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
 
     val mediaItems: StateFlow<List<MediaItem>> = combine(
         _mediaType,
-        _searchQuery
-    ) { type, query ->
-        Pair(type, query)
-    }.flatMapLatest { (type, query) ->
+        _searchQuery,
+        _sortOrder
+    ) { type, query, sort ->
+        Triple(type, query, sort)
+    }.flatMapLatest { (type, query, sort) ->
         mediaStoreHelper.getAllMedia(
             mediaType = type,
-            query = query.ifBlank { null }
+            query = query.ifBlank { null },
+            sortOrder = sort
         )
     }.stateIn(
         viewModelScope, SharingStarted.Lazily, emptyList()
@@ -57,6 +62,10 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun setSortOrder(order: MediaStoreHelper.SortOrder) {
+        _sortOrder.value = order
     }
 
     fun toggleSelection(id: Long) {
@@ -77,7 +86,6 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            // Force re-collection by toggling a flow
             _mediaType.value = _mediaType.value
             _isRefreshing.value = false
         }

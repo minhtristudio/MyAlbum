@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.PhotoAlbum
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -55,12 +57,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -178,20 +180,27 @@ fun AlbumCard(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         )
     ) {
         Column {
+            // Cover area with multi-thumb grid or single cover
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             ) {
-                if (album.coverUri != null) {
+                if (album.recentUris.size >= 4) {
+                    // 2x2 grid of recent items
+                    AlbumGridCover(album.recentUris)
+                } else if (album.recentUris.size >= 2) {
+                    // Side by side
+                    AlbumDoubleCover(album.recentUris)
+                } else if (album.coverUri != null) {
                     AsyncImage(
                         model = album.coverUri,
                         contentDescription = album.name,
@@ -215,59 +224,160 @@ fun AlbumCard(
                     }
                 }
 
-                // Bottom gradient
+                // Gradient overlay at bottom
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(70.dp)
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Color.Black.copy(alpha = 0.45f)
+                                    Color.Black.copy(alpha = 0.5f)
                                 )
                             )
                         )
                 )
 
-                // Count badge
+                // Count badge (bottom right)
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 10.dp, bottom = 10.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color.Black.copy(alpha = 0.55f)
+                        .padding(end = 8.dp, bottom = 8.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.Black.copy(alpha = 0.5f)
                 ) {
                     Text(
                         "${album.count}",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White,
                         fontWeight = FontWeight.Medium
                     )
                 }
+
+                // Video indicator (bottom left) if album has videos
+                if (album.videoCount > 0) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 8.dp, bottom = 8.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = AppColors.VideoBadge.copy(alpha = 0.9f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Videocam,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                "${album.videoCount}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
             }
 
+            // Album info
             Column(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 Text(
                     album.name,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    "${album.count} muc",
+                    "${album.count} muc" + if (album.videoCount > 0) " (${album.videoCount} video)" else "",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AlbumGridCover(uris: List<android.net.Uri>) {
+    // 2x2 grid of recent items
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(modifier = Modifier.weight(1f)) {
+            AsyncImage(
+                model = uris.getOrNull(0),
+                contentDescription = null,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Low
+            )
+            Spacer(modifier = Modifier.size(2.dp))
+            AsyncImage(
+                model = uris.getOrNull(1),
+                contentDescription = null,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Low
+            )
+        }
+        Spacer(modifier = Modifier.size(2.dp))
+        Row(modifier = Modifier.weight(1f)) {
+            AsyncImage(
+                model = uris.getOrNull(2),
+                contentDescription = null,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Low
+            )
+            Spacer(modifier = Modifier.size(2.dp))
+            AsyncImage(
+                model = uris.getOrNull(3),
+                contentDescription = null,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Low
+            )
+        }
+    }
+}
+
+@Composable
+fun AlbumDoubleCover(uris: List<android.net.Uri>) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        AsyncImage(
+            model = uris.getOrNull(0),
+            contentDescription = null,
+            modifier = Modifier.weight(1f),
+            contentScale = ContentScale.Crop,
+            filterQuality = FilterQuality.Low
+        )
+        Spacer(modifier = Modifier.size(2.dp))
+        AsyncImage(
+            model = uris.getOrNull(1),
+            contentDescription = null,
+            modifier = Modifier.weight(1f),
+            contentScale = ContentScale.Crop,
+            filterQuality = FilterQuality.Low
+        )
     }
 }
 
@@ -314,6 +424,9 @@ fun AlbumMediaScreen(
     onBackClick: () -> Unit,
     gridSize: Int = 3
 ) {
+    val photoCount = mediaItems.count { !it.isVideo }
+    val videoCount = mediaItems.count { it.isVideo }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -329,7 +442,7 @@ fun AlbumMediaScreen(
                         )
                         if (mediaItems.isNotEmpty()) {
                             Text(
-                                "${mediaItems.size} muc",
+                                "$photoCount anh, $videoCount video",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -401,6 +514,9 @@ fun FavoritesScreen(
     onMediaClick: (Int) -> Unit,
     gridSize: Int = 3
 ) {
+    val photoCount = favorites.count { !it.isVideo }
+    val videoCount = favorites.count { it.isVideo }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -414,7 +530,7 @@ fun FavoritesScreen(
                         )
                         if (favorites.isNotEmpty()) {
                             Text(
-                                "${favorites.size} muc",
+                                "$photoCount anh, $videoCount video",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

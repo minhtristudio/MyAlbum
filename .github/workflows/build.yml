@@ -60,27 +60,42 @@ jobs:
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v5.0.0
-        name: MyAlbum v5.0.0 - UI Overhaul
+        tag_name: v5.1.0
+        name: MyAlbum v5.1.0 - Items & Albums Upgrade
         body: |
-          ## MyAlbum v5.0.0 - UI Overhaul
+          ## MyAlbum v5.1.0 - Items & Albums Upgrade
 
-          ### UI Upgrade:
-          - Complete UI redesign with clean Material You styling
-          - True dark theme with proper surface container hierarchy
-          - Premium color palette with better contrast
-          - Grouped settings cards with rounded corners
-          - Enhanced album cards with gradient overlays
-          - Improved stats bar with icon layout
-          - Cleaner filter chips and navigation
-          - Better empty state views
-          - Refined viewer controls and page indicator
+          ### Video Thumbnail Fix:
+          - Videos now show proper thumbnails from MediaStore
+          - Added thumbnailUri field with fallback loading
+          - Error fallback for videos that fail to load thumbnail
 
-          ### Changes:
-          - Removed VenCA security module (photo app doesn't need DEX protection)
-          - Re-enabled app backup functionality
-          - Cleaned up ProGuard rules
-          - Improved TopAppBar styling across all screens
+          ### Media Item UI Upgrade:
+          - Dynamic aspect ratio based on actual image/video dimensions
+          - Video overlay: play icon in circle background, duration badge, file size
+          - High-res image badge (width > 3000px) showing resolution
+          - Large file size badge for photos > 5MB
+          - Smaller grid gaps (2dp) for tighter, cleaner grid
+          - Subtle 4dp rounded corners on grid items
+
+          ### Album Card UI Upgrade:
+          - Multi-thumbnail grid cover (2x2) for albums with 4+ items
+          - Double-thumbnail cover for albums with 2-3 items
+          - Video count indicator badge (red) on album cards
+          - Album description shows "X muc (Y video)"
+          - Refined card styling with better contrast
+
+          ### New Features:
+          - Sort dropdown in gallery (newest, oldest, name A-Z)
+          - GalleryViewModel now supports sort order
+          - Stats bar shows total storage size
+          - Album/Favorites subtitle shows photo + video counts
+          - MediaItem now includes orientation and gridAspectRatio
+
+          ### Data Improvements:
+          - AlbumInfo tracks videoCount per album
+          - AlbumInfo stores recentUris for multi-thumb grid
+          - MediaStoreHelper queries ORIENTATION column
 
           Created by MT Studio
         files: app/build/outputs/apk/release/*.apk

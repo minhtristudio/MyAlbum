@@ -34,13 +34,16 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Image
@@ -63,6 +66,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,6 +84,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
@@ -139,9 +144,7 @@ fun groupMediaByDate(items: List<MediaItem>): Map<String, List<MediaItem>> {
     return groups
 }
 
-fun formatNumber(num: Int): String {
-    return String.format("%,d", num)
-}
+fun formatNumber(num: Int): String = String.format("%,d", num)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -160,10 +163,11 @@ fun GalleryScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     var showSearch by remember { mutableStateOf(false) }
-    var showMediaTypeMenu by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     val photoCount = mediaItems.count { !it.isVideo }
     val videoCount = mediaItems.count { it.isVideo }
+    val totalSize = mediaItems.sumOf { it.size }
     val groupedMedia = remember(mediaItems) { groupMediaByDate(mediaItems) }
 
     Scaffold(
@@ -216,17 +220,12 @@ fun GalleryScreen(
                                 Icon(Icons.Default.Search, contentDescription = "Tim kiem")
                             }
                             Box {
-                                IconButton(onClick = { showMediaTypeMenu = true }) {
-                                    Icon(Icons.Default.FilterList, contentDescription = "Bo loc")
+                                IconButton(onClick = { showSortMenu = true }) {
+                                    Icon(Icons.Default.Sort, contentDescription = "Sap xep")
                                 }
-                                MediaTypeDropdownMenu(
-                                    expanded = showMediaTypeMenu,
-                                    onDismiss = { showMediaTypeMenu = false },
-                                    currentType = mediaType,
-                                    onTypeSelected = {
-                                        viewModel.setMediaType(it)
-                                        showMediaTypeMenu = false
-                                    }
+                                SortDropdownMenu(
+                                    expanded = showSortMenu,
+                                    onDismiss = { showSortMenu = false },
                                 )
                             }
                         }
@@ -240,7 +239,7 @@ fun GalleryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        if (mediaItems.isEmpty()) {
+        if (mediaItems.isEmpty() && !showSearch) {
             EmptyStateView(
                 modifier = Modifier.padding(paddingValues),
                 message = "Khong tim thay anh/video nao",
@@ -259,7 +258,8 @@ fun GalleryScreen(
                 StatsBar(
                     photoCount = photoCount,
                     videoCount = videoCount,
-                    albumCount = groupedMedia.size
+                    albumCount = groupedMedia.size,
+                    totalSize = totalSize
                 )
 
                 // Selection info
@@ -331,6 +331,7 @@ fun StatsBar(
     photoCount: Int,
     videoCount: Int,
     albumCount: Int,
+    totalSize: Long = 0,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -344,7 +345,7 @@ fun StatsBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -359,12 +360,10 @@ fun StatsBar(
                 count = videoCount,
                 label = "video"
             )
-            StatsDivider()
-            StatsItem(
-                icon = Icons.Outlined.Folder,
-                count = albumCount,
-                label = "nhom"
-            )
+            if (totalSize > 0) {
+                StatsDivider()
+                StatsSizeItem(totalSize)
+            }
         }
     }
 }
@@ -373,18 +372,12 @@ fun StatsBar(
 fun StatsItem(icon: ImageVector, count: Int, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
         Text(
             formatNumber(count),
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
@@ -396,12 +389,36 @@ fun StatsItem(icon: ImageVector, count: Int, label: String) {
 }
 
 @Composable
+fun StatsSizeItem(totalSize: Long) {
+    val sizeStr = when {
+        totalSize < 1024 * 1024 * 1024 -> String.format("%.1f MB", totalSize / (1024.0 * 1024))
+        else -> String.format("%.1f GB", totalSize / (1024.0 * 1024 * 1024))
+    }
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(1.dp)
+    ) {
+        Text(
+            sizeStr,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            "dung luong",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
 fun StatsDivider() {
     Box(
         modifier = Modifier
-            .height(28.dp)
+            .height(24.dp)
             .width(1.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     )
 }
 
@@ -437,6 +454,27 @@ fun FilterChipItem(
             selectedBorderColor = MaterialTheme.colorScheme.primary
         )
     )
+}
+
+@Composable
+fun SortDropdownMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.material3.DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        val sortOptions = listOf(
+            Triple("Moi nhat", Icons.Default.Schedule, MediaStoreHelper.SortOrder.DATE_DESC),
+            Triple("Cu nhat", Icons.Default.ArrowDownward, MediaStoreHelper.SortOrder.DATE_ASC),
+            Triple("Ten A-Z", Icons.Default.Sort, MediaStoreHelper.SortOrder.NAME_ASC),
+        )
+        sortOptions.forEach { (label, icon, order) ->
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text(label) },
+                onClick = { onDismiss() },
+                leadingIcon = { Icon(icon, contentDescription = null) }
+            )
+        )
+    }
 }
 
 @Composable
@@ -522,8 +560,8 @@ fun GroupedMediaGrid(
         modifier = modifier,
         state = gridState,
         contentPadding = PaddingValues(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         groupedMedia.forEach { (dateHeader, items) ->
             item(span = { GridItemSpan(spanCount) }) {
@@ -561,8 +599,8 @@ fun MediaGrid(
         columns = GridCells.Fixed(spanCount),
         modifier = modifier,
         contentPadding = PaddingValues(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         items(
             items = items,
@@ -628,16 +666,23 @@ fun MediaGridItem(
 ) {
     Box(
         modifier = modifier
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(6.dp))
+            .aspectRatio(item.gridAspectRatio)
+            .clip(RoundedCornerShape(4.dp))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
         contentAlignment = Alignment.Center
     ) {
+        // Image/Video thumbnail
+        val imageModel = if (item.isVideo && item.thumbnailUri != null) {
+            item.thumbnailUri
+        } else {
+            item.uri
+        }
+
         SubcomposeAsyncImage(
-            model = item.uri,
+            model = imageModel,
             contentDescription = item.name,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
@@ -648,13 +693,77 @@ fun MediaGridItem(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
+            },
+            error = {
+                // Fallback for videos that fail to load - try contentUri directly
+                if (item.isVideo) {
+                    SubcomposeAsyncImage(
+                        model = item.uri,
+                        contentDescription = item.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        filterQuality = FilterQuality.Low,
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Outlined.Image,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        )
+                    }
+                }
             }
         )
 
+        // Video overlay with play icon, duration, size
         if (item.isVideo) {
             VideoOverlay(item)
         }
 
+        // File size badge for large files (>5MB)
+        if (item.size > 5 * 1024 * 1024 && !item.isVideo) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(3.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = Color.Black.copy(alpha = 0.55f)
+            ) {
+                Text(
+                    item.formattedSize,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                    color = Color.White
+                )
+            }
+        }
+
+        // Resolution badge for high-res images (>3000px)
+        if (item.width > 3000 && !item.isVideo) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(3.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+            ) {
+                Text(
+                    item.formattedResolution,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+
+        // Selection overlay
         AnimatedVisibility(
             visible = isSelected || isSelectionMode,
             enter = fadeIn(animationSpec = tween(150)),
@@ -673,8 +782,8 @@ fun MediaGridItem(
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(26.dp),
+                        .padding(5.dp)
+                        .size(24.dp),
                     shape = CircleShape,
                     color = if (isSelected) {
                         MaterialTheme.colorScheme.primary
@@ -706,50 +815,59 @@ fun VideoOverlay(item: MediaItem) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, AppColors.VideoOverlay)
+                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
                 )
             )
     ) {
-        Icon(
-            Icons.Default.PlayCircle,
-            contentDescription = null,
+        // Play icon - subtle circle background
+        Surface(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(40.dp),
-            tint = Color.White.copy(alpha = 0.9f)
-        )
+                .size(36.dp),
+            shape = CircleShape,
+            color = Color.White.copy(alpha = 0.25f)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.White.copy(alpha = 0.95f)
+                )
+            }
+        }
 
+        // Duration badge
         if (item.duration > 0) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(5.dp),
+                    .padding(4.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = AppColors.VideoOverlay
+                color = Color.Black.copy(alpha = 0.6f)
             ) {
                 Text(
                     item.formattedDuration,
-                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                     color = Color.White
                 )
             }
         }
 
+        // File size badge
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(5.dp),
+                .padding(4.dp),
             shape = RoundedCornerShape(4.dp),
-            color = AppColors.VideoBadge
+            color = Color.Black.copy(alpha = 0.6f)
         ) {
-            Icon(
-                Icons.Default.Videocam,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(3.dp)
-                    .size(12.dp),
-                tint = Color.White
+            Text(
+                item.formattedSize,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
     }

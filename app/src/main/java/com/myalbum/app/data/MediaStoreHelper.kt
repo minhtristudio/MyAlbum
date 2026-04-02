@@ -58,6 +58,7 @@ class MediaStoreHelper(private val context: Context) {
 
     fun getAlbums(): Flow<List<AlbumInfo>> = flow {
         val albums = mutableMapOf<String, AlbumInfo>()
+        val albumRecentUris = mutableMapOf<String, MutableList<Uri>>()
         val resolver = context.contentResolver
 
         for (uri in listOf(
@@ -82,18 +83,29 @@ class MediaStoreHelper(private val context: Context) {
                         val bucketId = cursor.getString(bucketIdIndex) ?: "unknown"
                         val bucketName = cursor.getString(bucketNameIndex) ?: "Unknown"
                         val id = cursor.getLong(idIndex)
+                        val itemUri = ContentUris.withAppendedId(uri, id)
+
+                        // Track recent URIs for album cover grid
+                        val recentList = albumRecentUris.getOrPut(bucketId) { mutableListOf() }
+                        if (recentList.size < 4) recentList.add(itemUri)
 
                         val existing = albums[bucketId]
                         if (existing != null) {
-                            albums[bucketId] = existing.copy(count = existing.count + 1)
+                            val newVideoCount = if (isVideo) existing.videoCount + 1 else existing.videoCount
+                            albums[bucketId] = existing.copy(
+                                count = existing.count + 1,
+                                videoCount = newVideoCount,
+                                recentUris = recentList.toList()
+                            )
                         } else {
-                            val coverUri = ContentUris.withAppendedId(uri, id)
                             albums[bucketId] = AlbumInfo(
                                 bucketId = bucketId,
                                 name = bucketName,
-                                coverUri = coverUri,
+                                coverUri = itemUri,
                                 count = 1,
-                                isVideo = isVideo
+                                isVideo = isVideo,
+                                videoCount = if (isVideo) 1 else 0,
+                                recentUris = recentList.toList()
                             )
                         }
                     }
@@ -165,7 +177,8 @@ class MediaStoreHelper(private val context: Context) {
             MediaStore.MediaColumns.WIDTH,
             MediaStore.MediaColumns.HEIGHT,
             MediaStore.MediaColumns.BUCKET_ID,
-            MediaStore.MediaColumns.BUCKET_DISPLAY_NAME
+            MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
+            MediaStore.MediaColumns.ORIENTATION
         )
         return if (isVideo) {
             base + MediaStore.Video.Media.DURATION
@@ -190,16 +203,30 @@ class MediaStoreHelper(private val context: Context) {
         val bucketId = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_ID)) ?: ""
         val bucketName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.BUCKET_DISPLAY_NAME)) ?: ""
 
+        val orientation = cursor.getColumnIndex(MediaStore.MediaColumns.ORIENTATION).let { idx ->
+            if (idx >= 0) cursor.getInt(idx) else 0
+        }
+
         val duration = if (isVideo) {
             val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
             if (durationIndex >= 0) cursor.getLong(durationIndex) else 0L
         } else 0L
 
-        val uri = ContentUris.withAppendedId(
+        val contentUri = ContentUris.withAppendedId(
             if (isVideo) MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             else MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             id
         )
+
+        // For videos: use MediaStore thumbnail URI (works on API 29+)
+        val thumbnailUri: Uri? = if (isVideo && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentUris.withAppendedId(
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                id
+            )
+        } else {
+            null
+        }
 
         val isFavorite = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val favIndex = cursor.getColumnIndex(MediaStore.MediaColumns.IS_FAVORITE)
@@ -208,7 +235,7 @@ class MediaStoreHelper(private val context: Context) {
 
         return MediaItem(
             id = id,
-            uri = uri,
+            uri = contentUri,
             name = name,
             mimeType = mimeType,
             size = size,
@@ -219,7 +246,9 @@ class MediaStoreHelper(private val context: Context) {
             bucketId = bucketId,
             bucketName = bucketName,
             isFavorite = isFavorite,
-            isVideo = isVideo
+            isVideo = isVideo,
+            thumbnailUri = thumbnailUri,
+            orientation = orientation
         )
     }
 
