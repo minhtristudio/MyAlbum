@@ -60,42 +60,36 @@ jobs:
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v5.1.0
-        name: MyAlbum v5.1.0 - Items & Albums Upgrade
+        tag_name: v5.1.1
+        name: MyAlbum v5.1.1 - Crash Fix & Video Thumbnails
         body: |
-          ## MyAlbum v5.1.0 - Items & Albums Upgrade
+          ## MyAlbum v5.1.1 - Crash Fix & Video Thumbnails
 
-          ### Video Thumbnail Fix:
-          - Videos now show proper thumbnails from MediaStore
-          - Added thumbnailUri field with fallback loading
-          - Error fallback for videos that fail to load thumbnail
+          ### Critical Crash Fix:
+          - Fixed app crash on startup when loading media items
+          - Root cause: Coil trying to decode video content URIs as images caused OOM
+          - Removed recursive SubcomposeAsyncImage error handler that amplified the crash
 
-          ### Media Item UI Upgrade:
-          - Dynamic aspect ratio based on actual image/video dimensions
-          - Video overlay: play icon in circle background, duration badge, file size
-          - High-res image badge (width > 3000px) showing resolution
-          - Large file size badge for photos > 5MB
-          - Smaller grid gaps (2dp) for tighter, cleaner grid
-          - Subtle 4dp rounded corners on grid items
+          ### Video Thumbnail System:
+          - Added VideoThumbnailUtil for proper video frame extraction
+          - Uses ContentResolver.loadThumbnail (API 29+) and MediaMetadataRetriever (older)
+          - Async thumbnail generation via produceState - no more main thread blocking
+          - Thumbnails cached to disk for fast subsequent loading
 
-          ### Album Card UI Upgrade:
-          - Multi-thumbnail grid cover (2x2) for albums with 4+ items
-          - Double-thumbnail cover for albums with 2-3 items
-          - Video count indicator badge (red) on album cards
-          - Album description shows "X muc (Y video)"
-          - Refined card styling with better contrast
+          ### Performance Improvements:
+          - Optimized grid index lookup: O(n) indexOf → O(1) HashMap lookup
+          - Added try-catch around all MediaStore queries for crash safety
+          - Individual item errors no longer crash the entire gallery
 
-          ### New Features:
-          - Sort dropdown in gallery (newest, oldest, name A-Z)
-          - GalleryViewModel now supports sort order
-          - Stats bar shows total storage size
-          - Album/Favorites subtitle shows photo + video counts
-          - MediaItem now includes orientation and gridAspectRatio
+          ### Memory Management:
+          - Added MyAlbumApp with custom Coil ImageLoader
+          - 25% app memory for image cache, 5% disk for image cache
+          - Controlled memory usage prevents OOM on large galleries
 
-          ### Data Improvements:
-          - AlbumInfo tracks videoCount per album
-          - AlbumInfo stores recentUris for multi-thumb grid
-          - MediaStoreHelper queries ORIENTATION column
+          ### ProGuard Improvements:
+          - Added Accompanist permissions keep rules
+          - Added MyAlbumApp keep rules
+          - All critical classes properly preserved in release builds
 
           Created by MT Studio
         files: app/build/outputs/apk/release/*.apk
