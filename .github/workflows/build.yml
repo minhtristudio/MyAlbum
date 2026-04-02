@@ -60,19 +60,28 @@ jobs:
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v4.0.1
-        name: MyAlbum v4.0.1 - Hotfix
+        tag_name: v5.0.0
+        name: MyAlbum v5.0.0 - UI Overhaul
         body: |
-          ## MyAlbum v4.0.1 - Hotfix
+          ## MyAlbum v5.0.0 - UI Overhaul
 
-          ### Bug Fix:
-          - **CRITICAL**: Fixed app crash on launch caused by aggressive ProGuard rules
-          - Removed dangerous `kotlin.jvm.internal` side-effect assumptions that stripped Kotlin null checks
-          - Added proper keep rules for all app Composable functions
-          - Added keep rules for ViewModels, navigation routes, and enums
-          - Improved VenCA ProGuard protection rules
+          ### UI Upgrade:
+          - Complete UI redesign with clean Material You styling
+          - True dark theme with proper surface container hierarchy
+          - Premium color palette with better contrast
+          - Grouped settings cards with rounded corners
+          - Enhanced album cards with gradient overlays
+          - Improved stats bar with icon layout
+          - Cleaner filter chips and navigation
+          - Better empty state views
+          - Refined viewer controls and page indicator
 
-          Protected by VenCA v1.0
+          ### Changes:
+          - Removed VenCA security module (photo app doesn't need DEX protection)
+          - Re-enabled app backup functionality
+          - Cleaned up ProGuard rules
+          - Improved TopAppBar styling across all screens
+
           Created by MT Studio
         files: app/build/outputs/apk/release/*.apk
         draft: false

@@ -34,10 +34,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Style
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -126,7 +124,7 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Cai dat", style = MaterialTheme.typography.titleLarge)
+                    Text("Cai dat", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -134,7 +132,7 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 windowInsets = WindowInsets.statusBars
             )
@@ -145,39 +143,48 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(top = 8.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // ==================== Appearance ====================
+            // ==================== Appearance Section ====================
             SectionHeader("Giao dien")
 
-            SettingSwitchItem(
-                icon = Icons.Default.Brightness6,
-                title = "Che do toi",
-                subtitle = if (darkTheme) "Dang bat" else "Dang tat",
-                checked = darkTheme,
-                onCheckedChange = { checked ->
-                    onDarkThemeChanged(checked)
-                    scope.launch { saveThemeMode(context, if (checked) "dark" else "light") }
-                }
-            )
-
-            SettingItem(
-                icon = Icons.Default.GridView,
-                title = "So cot hien thi",
-                subtitle = "$gridSize cot",
-                onClick = null
-            )
-
             Surface(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                Column {
+                    SettingSwitchItem(
+                        icon = Icons.Default.Brightness6,
+                        title = "Che do toi",
+                        subtitle = if (darkTheme) "Dang bat" else "Dang tat",
+                        checked = darkTheme,
+                        onCheckedChange = { checked ->
+                            onDarkThemeChanged(checked)
+                            scope.launch { saveThemeMode(context, if (checked) "dark" else "light") }
+                        }
+                    )
+                    androidx.compose.material3.HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    SettingItem(
+                        icon = Icons.Default.GridView,
+                        title = "So cot hien thi",
+                        subtitle = "$gridSize cot"
+                    )
+                }
+            }
+
+            // Grid size selector
+            Surface(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().selectableGroup().padding(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                    modifier = Modifier.fillMaxWidth().selectableGroup().padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     listOf(2, 3, 4, 5).forEach { size ->
                         Row(
@@ -191,7 +198,7 @@ fun SettingsScreen(
                                     },
                                     role = Role.RadioButton
                                 )
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
@@ -208,74 +215,72 @@ fun SettingsScreen(
                 }
             }
 
-            // ==================== Storage ====================
+            // ==================== Storage Section ====================
             SectionHeader("Bo nho")
 
-            SettingItem(
-                icon = Icons.Default.DeleteSweep,
-                title = "Xoa bo nho cache",
-                subtitle = if (cacheCleared) "Da xoa thanh cong!" else "Giai phong khong gian anh",
-                onClick = {
-                    try {
-                        Coil.imageLoader(context).memoryCache?.clear()
-                        cacheCleared = true
-                    } catch (_: Exception) {}
+            Surface(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                Column {
+                    SettingItem(
+                        icon = Icons.Default.DeleteSweep,
+                        title = "Xoa bo nho cache",
+                        subtitle = if (cacheCleared) "Da xoa thanh cong!" else "Giai phong khong gian anh",
+                        onClick = {
+                            try {
+                                Coil.imageLoader(context).memoryCache?.clear()
+                                cacheCleared = true
+                            } catch (_: Exception) {}
+                        }
+                    )
+                    androidx.compose.material3.HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    SettingItem(
+                        icon = Icons.Default.Storage,
+                        title = "Quan ly bo nho",
+                        subtitle = "Xem dung luong media"
+                    )
                 }
-            )
+            }
 
-            SettingItem(
-                icon = Icons.Default.Storage,
-                title = "Quan ly bo nho",
-                subtitle = "Xem dung luong media"
-            )
-
-            // ==================== Security - VenCA ====================
-            SectionHeader("Bao mat")
-
-            SettingItem(
-                icon = Icons.Default.Shield,
-                title = "VenCA Protection",
-                subtitle = "Bao ve ma nguon DEX v1.0"
-            )
-
-            SettingItem(
-                icon = Icons.Default.VerifiedUser,
-                title = "Trang thai bao mat",
-                subtitle = "Da kich hoat - Bao ve toan dien"
-            )
-
-            SettingItem(
-                icon = Icons.Default.Code,
-                title = "Ma hoa van ban",
-                subtitle = "R8 Obfuscation + VenCA Shield"
-            )
-
-            // ==================== App Info ====================
+            // ==================== App Info Section ====================
             SectionHeader("Thong tin")
 
-            SettingItem(
-                icon = Icons.Default.Android,
-                title = "Android yeu cau",
-                subtitle = "Android 8.0+ (API 26+)"
-            )
-
-            SettingItem(
-                icon = Icons.Default.Style,
-                title = "Thiet ke",
-                subtitle = "Material You (M3) - Jetpack Compose"
-            )
-
-            SettingItem(
-                icon = Icons.Default.Palette,
-                title = "Icon",
-                subtitle = "Material Icons Extended"
-            )
-
-            SettingItem(
-                icon = Icons.Default.Security,
-                title = "Quyen truy cap",
-                subtitle = "Quan ly quyen ung dung"
-            )
+            Surface(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                Column {
+                    SettingItem(
+                        icon = Icons.Default.Android,
+                        title = "Android yeu cau",
+                        subtitle = "Android 8.0+ (API 26+)"
+                    )
+                    androidx.compose.material3.HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    SettingItem(
+                        icon = Icons.Default.Style,
+                        title = "Thiet ke",
+                        subtitle = "Material You (M3) - Jetpack Compose"
+                    )
+                    androidx.compose.material3.HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    SettingItem(
+                        icon = Icons.Default.Palette,
+                        title = "Icon",
+                        subtitle = "Material Icons Extended"
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -297,15 +302,15 @@ fun AboutCard(modifier: Modifier = Modifier) {
                 width = 1.dp,
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
                     )
                 ),
                 shape = RoundedCornerShape(24.dp)
             ),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-        tonalElevation = 2.dp
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 0.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(24.dp),
@@ -314,7 +319,7 @@ fun AboutCard(modifier: Modifier = Modifier) {
             // Logo
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(72.dp)
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
@@ -322,14 +327,14 @@ fun AboutCard(modifier: Modifier = Modifier) {
                                 MaterialTheme.colorScheme.tertiary
                             )
                         ),
-                        shape = RoundedCornerShape(22.dp)
+                        shape = RoundedCornerShape(20.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.PhotoLibrary,
                     contentDescription = null,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(36.dp),
                     tint = Color.White
                 )
             }
@@ -337,7 +342,7 @@ fun AboutCard(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("MyAlbum", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text("v4.0.1", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("v5.0.0", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -349,7 +354,7 @@ fun AboutCard(modifier: Modifier = Modifier) {
                         Brush.horizontalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                                 Color.Transparent
                             )
                         )
@@ -363,26 +368,9 @@ fun AboutCard(modifier: Modifier = Modifier) {
                 Text("Phat trien boi MT Studio", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // VenCA badge
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
-                    Text("Protected by VenCA v1.0", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Medium)
-                }
-            }
-
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text("\u00A9 2024-2026 MT Studio. All rights reserved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+            Text("\u00A9 2024-2026 MT Studio. All rights reserved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
         }
     }
 }
@@ -390,13 +378,13 @@ fun AboutCard(modifier: Modifier = Modifier) {
 @Composable
 fun MiniGridPreview(columns: Int) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(columns) {
             Box(
                 modifier = Modifier
-                    .size(4.dp)
+                    .size(5.dp)
                     .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(1.dp))
             )
         }
@@ -407,10 +395,10 @@ fun MiniGridPreview(columns: Int) {
 fun SectionHeader(title: String) {
     Text(
         title,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.SemiBold
+        fontWeight = FontWeight.Bold
     )
 }
 
@@ -420,25 +408,26 @@ fun SettingItem(icon: ImageVector, title: String, subtitle: String, onClick: (()
     Surface(
         onClick = onClick ?: {},
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(0.dp),
+        color = Color.Transparent
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ) {
                 Icon(
                     icon, contentDescription = null,
                     modifier = Modifier.size(36.dp).padding(8.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -448,37 +437,32 @@ fun SettingItem(icon: ImageVector, title: String, subtitle: String, onClick: (()
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingSwitchItem(icon: ImageVector, title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
         ) {
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-            ) {
-                Icon(
-                    icon, contentDescription = null,
-                    modifier = Modifier.size(36.dp).padding(8.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary
-                )
+            Icon(
+                icon, contentDescription = null,
+                modifier = Modifier.size(36.dp).padding(8.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary
+            )
+        )
     }
 }

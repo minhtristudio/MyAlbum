@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,23 +30,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -54,6 +54,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,6 +70,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -180,18 +182,18 @@ class MainActivity : ComponentActivity() {
 fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition()
     val scale by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
+        initialValue = 0.88f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
+            animation = tween(1800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         )
     )
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
+        initialValue = 0.5f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
+            animation = tween(1800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         )
     )
@@ -199,36 +201,28 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF08080F),
-                        Color(0xFF10101E),
-                        Color(0xFF0C1528)
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(32.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Premium logo with animated glow
+            // Animated icon
             Box(
                 modifier = Modifier
-                    .size(130.dp)
+                    .size(120.dp)
                     .background(
-                        brush = Brush.radialGradient(
+                        brush = Brush.verticalGradient(
                             colors = listOf(
-                                AppColors.GradientStart.copy(alpha = 0.4f),
-                                AppColors.GradientMid.copy(alpha = 0.15f),
-                                Color.Transparent
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.tertiaryContainer,
                             )
                         ),
-                        shape = RoundedCornerShape(65.dp)
+                        shape = RoundedCornerShape(32.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -236,10 +230,10 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                     Icons.Outlined.PhotoLibrary,
                     contentDescription = null,
                     modifier = Modifier
-                        .size(68.dp)
+                        .size(56.dp)
                         .scale(scale)
                         .graphicsLayer { this.alpha = alpha },
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
 
@@ -249,75 +243,65 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                 "MyAlbum",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                "Album anh & video dang cap nhat",
+                "Ung dung quan ly anh & video cua ban",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.55f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Premium button with gradient
-            Button(
+            // Premium CTA button
+            Surface(
                 onClick = onRequestPermissions,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.primary,
+                shadowElevation = 4.dp
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    AppColors.GradientStart,
-                                    AppColors.GradientEnd
-                                )
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.White)
-                        Text("Cap quyen truy cap", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                    }
+                    Text(
+                        "Cap quyen truy cap",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                "Can quyen doc anh va video tu thiet bi",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center
+            )
 
             Spacer(modifier = Modifier.height(80.dp))
 
             // Branding
-            Surface(
-                modifier = Modifier.clip(RoundedCornerShape(24.dp)),
-                color = Color.White.copy(alpha = 0.05f)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White.copy(alpha = 0.5f))
-                        Text("v4.0.1", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.45f))
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text("Created by MT Studio", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.35f))
-                    Text("Protected by VenCA", style = MaterialTheme.typography.labelSmall, color = AppColors.GradientStart.copy(alpha = 0.5f))
-                }
-            }
+            Text(
+                "MT Studio",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            )
+            Text(
+                "v5.0.0",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+            )
         }
     }
 }
@@ -336,7 +320,6 @@ val bottomNavItems = listOf(
     BottomNavItem("settings", "Cai dat", Icons.Outlined.Settings, Icons.Filled.Settings)
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainNavigation(
     gridSize: Int,
@@ -366,14 +349,15 @@ fun MainNavigation(
             ) {
                 NavigationBar(
                     modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars),
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                    tonalElevation = 8.dp
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    tonalElevation = 0.dp,
                 ) {
                     bottomNavItems.forEach { item ->
+                        val selected = currentRoute == item.route
                         NavigationBarItem(
                             icon = {
                                 Icon(
-                                    if (currentRoute == item.route) item.selectedIcon else item.icon,
+                                    if (selected) item.selectedIcon else item.icon,
                                     contentDescription = item.label,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -382,10 +366,10 @@ fun MainNavigation(
                                 Text(
                                     item.label,
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (currentRoute == item.route) FontWeight.SemiBold else FontWeight.Normal
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                                 )
                             },
-                            selected = currentRoute == item.route,
+                            selected = selected,
                             onClick = {
                                 if (currentRoute != item.route) {
                                     navController.navigate(item.route) {
@@ -396,9 +380,11 @@ fun MainNavigation(
                                 }
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         )
                     }

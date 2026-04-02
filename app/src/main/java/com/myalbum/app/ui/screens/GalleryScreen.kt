@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -45,9 +46,6 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Videocam
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -55,6 +53,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -191,14 +190,20 @@ fun GalleryScreen(
                         }
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(28.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                    )
                 )
             } else {
                 TopAppBar(
                     title = {
                         Text(
                             "Thu vien",
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     },
                     actions = {
@@ -227,7 +232,7 @@ fun GalleryScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = MaterialTheme.colorScheme.background
                     ),
                     windowInsets = WindowInsets.statusBars
                 )
@@ -247,7 +252,7 @@ fun GalleryScreen(
                 FilterChipsLazyRow(
                     currentType = mediaType,
                     onTypeSelected = { viewModel.setMediaType(it) },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
                 // Stats bar
@@ -331,15 +336,15 @@ fun StatsBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-        tonalElevation = 1.dp
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -366,20 +371,26 @@ fun StatsBar(
 
 @Composable
 fun StatsItem(icon: ImageVector, count: Int, label: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Icon(
             icon,
             contentDescription = null,
-            modifier = Modifier.size(14.dp),
+            modifier = Modifier.size(18.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            "${formatNumber(count)} $label",
-            style = MaterialTheme.typography.labelMedium,
+            formatNumber(count),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -388,9 +399,9 @@ fun StatsItem(icon: ImageVector, count: Int, label: String) {
 fun StatsDivider() {
     Box(
         modifier = Modifier
-            .height(20.dp)
+            .height(28.dp)
             .width(1.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant)
+            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     )
 }
 
@@ -422,7 +433,7 @@ fun FilterChipItem(
             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
         border = FilterChipDefaults.filterChipBorder(
-            borderColor = MaterialTheme.colorScheme.outlineVariant,
+            borderColor = MaterialTheme.colorScheme.outline,
             selectedBorderColor = MaterialTheme.colorScheme.primary
         )
     )
@@ -435,19 +446,19 @@ fun MediaTypeDropdownMenu(
     currentType: MediaStoreHelper.MediaType,
     onTypeSelected: (MediaStoreHelper.MediaType) -> Unit
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
-        DropdownMenuItem(
+    androidx.compose.material3.DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        androidx.compose.material3.DropdownMenuItem(
             text = { Text("Moi nhat") },
             onClick = { onTypeSelected(currentType) },
             leadingIcon = { Icon(Icons.Default.Schedule, contentDescription = null) }
         )
-        Divider()
-        DropdownMenuItem(
+        androidx.compose.material3.HorizontalDivider()
+        androidx.compose.material3.DropdownMenuItem(
             text = { Text("Anh") },
             onClick = { onTypeSelected(MediaStoreHelper.MediaType.PHOTOS) },
             leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) }
         )
-        DropdownMenuItem(
+        androidx.compose.material3.DropdownMenuItem(
             text = { Text("Video") },
             onClick = { onTypeSelected(MediaStoreHelper.MediaType.VIDEOS) },
             leadingIcon = { Icon(Icons.Default.Videocam, contentDescription = null) }
@@ -465,21 +476,22 @@ fun SelectionInfoBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.primaryContainer,
-        tonalElevation = 2.dp
+        tonalElevation = 0.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 "Da chon $selectedCount / $totalCount",
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontWeight = FontWeight.Medium
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onSelectAll) {
                     Text("Chon tat ca", style = MaterialTheme.typography.labelMedium)
                 }
@@ -509,7 +521,7 @@ fun GroupedMediaGrid(
         columns = GridCells.Fixed(spanCount),
         modifier = modifier,
         state = gridState,
-        contentPadding = PaddingValues(3.dp),
+        contentPadding = PaddingValues(4.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
@@ -548,7 +560,7 @@ fun MediaGrid(
     LazyVerticalGrid(
         columns = GridCells.Fixed(spanCount),
         modifier = modifier,
-        contentPadding = PaddingValues(3.dp),
+        contentPadding = PaddingValues(4.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
@@ -574,7 +586,7 @@ fun DateHeaderItem(title: String, count: Int) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 4.dp),
+            .padding(vertical = 6.dp, horizontal = 8.dp),
         color = Color.Transparent
     ) {
         Row(
@@ -584,21 +596,21 @@ fun DateHeaderItem(title: String, count: Int) {
             Text(
                 title,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                "(${formatNumber(count)})",
+                "${formatNumber(count)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             )
         }
     }
@@ -617,7 +629,7 @@ fun MediaGridItem(
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(6.dp))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
@@ -634,15 +646,7 @@ fun MediaGridItem(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    AppColors.ShimmerStart,
-                                    AppColors.ShimmerEnd,
-                                    AppColors.ShimmerStart
-                                )
-                            )
-                        )
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
                 )
             }
         )
@@ -670,15 +674,15 @@ fun MediaGridItem(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(6.dp)
-                        .size(24.dp),
-                    shape = MaterialTheme.shapes.small,
+                        .size(26.dp),
+                    shape = CircleShape,
                     color = if (isSelected) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
                     },
                     border = if (!isSelected) {
-                        BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     } else null
                 ) {
                     if (isSelected) {
@@ -711,7 +715,7 @@ fun VideoOverlay(item: MediaItem) {
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(36.dp),
+                .size(40.dp),
             tint = Color.White.copy(alpha = 0.9f)
         )
 
@@ -719,13 +723,13 @@ fun VideoOverlay(item: MediaItem) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(4.dp),
+                    .padding(5.dp),
                 shape = RoundedCornerShape(4.dp),
                 color = AppColors.VideoOverlay
             ) {
                 Text(
                     item.formattedDuration,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White
                 )
@@ -735,7 +739,7 @@ fun VideoOverlay(item: MediaItem) {
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(4.dp),
+                .padding(5.dp),
             shape = RoundedCornerShape(4.dp),
             color = AppColors.VideoBadge
         ) {
@@ -766,13 +770,20 @@ fun EmptyStateView(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(32.dp)
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(72.dp),
-                tint = AppColors.EmptyState
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .size(48.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 message,
                 style = MaterialTheme.typography.bodyLarge,

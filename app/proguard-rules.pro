@@ -1,30 +1,19 @@
-# ==================== VenCA - DEX Protection Rules ====================
-# MyAlbum v4.0.1 - MT Studio
+# ==================== MyAlbum v5.0.0 - ProGuard Rules ====================
 
-# ==================== Core Protection ====================
+# ==================== Core ====================
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
-
-# Obfuscation settings
 -optimizationpasses 5
 -dontusemixedcaseclassnames
 -dontskipnonpubliclibraryclasses
 -verbose
 
-# ==================== Kotlin Metadata & Intrinsics (CRITICAL) ====================
-# KEEP kotlin.jvm.internal - removing these causes IMMEDIATE crash
+# ==================== Kotlin (CRITICAL - do not remove) ====================
 -keep class kotlin.jvm.internal.** { *; }
 -keepclassmembers class kotlin.jvm.internal.** { *; }
-
-# Keep Kotlin metadata for reflection
--keepattributes *Annotation*
 -keep class kotlin.Metadata { *; }
-
-# Keep Kotlin coroutines
--keepclassmembers class kotlinx.coroutines.** {
-    volatile <fields>;
-}
--keep class kotlinx.coroutines.internal.** { *; }
+-keepattributes *Annotation*
+-keepclassmembers class kotlinx.coroutines.internal.** { *; }
 -dontwarn kotlinx.coroutines.**
 
 # ==================== AndroidX ====================
@@ -62,18 +51,24 @@
 -keepclassmembers class androidx.datastore.** { *; }
 -dontwarn androidx.datastore.**
 
-# ==================== VenCA Security ====================
--keep class com.myalbum.app.security.VencaApplication { *; }
--keep class com.myalbum.app.security.Venca { *; }
--keepclassmembers class com.myalbum.app.security.Venca {
-    public *;
-}
-
 # ==================== App Models ====================
 -keep class com.myalbum.app.data.MediaItem { *; }
 -keep class com.myalbum.app.data.AlbumInfo { *; }
 -keep class com.myalbum.app.data.MediaStoreHelper$MediaType { *; }
 -keep class com.myalbum.app.data.MediaStoreHelper$SortOrder { *; }
+
+# ==================== App ViewModels ====================
+-keep class com.myalbum.app.viewmodel.** { *; }
+-keepclassmembers class com.myalbum.app.viewmodel.** { *; }
+
+# ==================== Navigation Routes ====================
+-keep class com.myalbum.app.ui.navigation.Screen { *; }
+-keepclassmembers class com.myalbum.app.ui.navigation.Screen$* { *; }
+
+# ==================== @Composable Functions ====================
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable <methods>;
+}
 
 # ==================== App Enums ====================
 -keepclassmembers enum com.myalbum.app.** {
@@ -83,32 +78,13 @@
     public *;
 }
 
-# ==================== ViewModels ====================
--keep class com.myalbum.app.viewmodel.** { *; }
--keepclassmembers class com.myalbum.app.viewmodel.** { *; }
-
-# ==================== Navigation Routes ====================
--keep class com.myalbum.app.ui.navigation.Screen { *; }
--keepclassmembers class com.myalbum.app.ui.navigation.Screen$* { *; }
-
-# ==================== Compose @Composable Functions ====================
-# Keep all Composable functions in the app
--keepclassmembers class * {
-    @androidx.compose.runtime.Composable <methods>;
-}
-
-# ==================== Serialization ====================
--keepclassmembers class * {
-    ** serialization;
-}
-
-# ==================== Enum (Global) ====================
+# ==================== Global Enum ====================
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
 
-# ==================== Prevent Reflection ====================
+# ==================== Reflection Safety ====================
 -keepattributes EnclosingMethod
 -keepattributes InnerClasses
 -keepattributes Signature
@@ -118,14 +94,4 @@
     public static *** d(...);
     public static *** v(...);
     public static *** i(...);
-}
-
-# ==================== WebView (if used) ====================
--keepclassmembers class * extends android.webkit.WebViewClient {
-    public void *(android.webkit.WebView, java.lang.String, android.graphics.Bitmap);
-    public boolean *(android.webkit.WebView, java.lang.String);
-    public void *(android.webkit.WebView, java.lang.String);
-}
--keepclassmembers class * extends android.webkit.WebChromeClient {
-    public void *(android.webkit.WebView, java.lang.String);
 }

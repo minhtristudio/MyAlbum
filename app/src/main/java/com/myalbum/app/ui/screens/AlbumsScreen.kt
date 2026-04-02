@@ -20,11 +20,12 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.PhotoAlbum
@@ -51,10 +52,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -63,7 +67,6 @@ import coil.compose.AsyncImage
 import com.myalbum.app.data.AlbumInfo
 import com.myalbum.app.data.MediaItem
 import com.myalbum.app.viewmodel.AlbumViewModel
-import kotlin.math.min
 
 enum class AlbumSortOrder(val displayName: String) {
     NAME("Ten"),
@@ -98,14 +101,15 @@ fun AlbumListScreen(
                 title = {
                     Text(
                         "Album",
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
                 },
                 actions = {
                     Box {
                         IconButton(onClick = { sortExpanded = true }) {
                             Icon(
-                                Icons.Default.Sort,
+                                Icons.Default.MoreVert,
                                 contentDescription = "Sap xep"
                             )
                         }
@@ -129,7 +133,7 @@ fun AlbumListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 windowInsets = WindowInsets.statusBars
             )
@@ -147,12 +151,12 @@ fun AlbumListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(sortedAlbums, key = { it.bucketId }) { album ->
-                    StaggeredAlbumCard(
+                    AlbumCard(
                         album = album,
                         onClick = {
                             onAlbumClick(album.bucketId, album.name)
@@ -166,34 +170,26 @@ fun AlbumListScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StaggeredAlbumCard(
+fun AlbumCard(
     album: AlbumInfo,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val heightRatio = when {
-        album.count > 100 -> 1.2f
-        album.count > 50 -> 1.1f
-        album.count > 20 -> 1.0f
-        album.count > 10 -> 0.95f
-        else -> 0.85f
-    }
-
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f / heightRatio)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             ) {
                 if (album.coverUri != null) {
                     AsyncImage(
@@ -207,58 +203,62 @@ fun StaggeredAlbumCard(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                            .background(MaterialTheme.colorScheme.surfaceContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Outlined.Folder,
                             contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                         )
                     }
                 }
 
+                // Bottom gradient
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height(60.dp)
+                        .height(56.dp)
                         .background(
-                            androidx.compose.ui.graphics.Brush.verticalGradient(
+                            Brush.verticalGradient(
                                 colors = listOf(
-                                    androidx.compose.ui.graphics.Color.Transparent,
-                                    androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.45f)
                                 )
                             )
                         )
                 )
 
+                // Count badge
                 Surface(
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 10.dp, bottom = 10.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.Black.copy(alpha = 0.55f)
                 ) {
                     Text(
                         "${album.count}",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
 
             Column(
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
                 Text(
                     album.name,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -324,13 +324,16 @@ fun AlbumMediaScreen(
                             bucketName,
                             style = MaterialTheme.typography.titleLarge,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            "${mediaItems.size} muc",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        if (mediaItems.isNotEmpty()) {
+                            Text(
+                                "${mediaItems.size} muc",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
@@ -339,7 +342,7 @@ fun AlbumMediaScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 windowInsets = WindowInsets.statusBars
             )
@@ -406,7 +409,8 @@ fun FavoritesScreen(
                     Column {
                         Text(
                             "Yeu thich",
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
                         if (favorites.isNotEmpty()) {
                             Text(
@@ -418,7 +422,7 @@ fun FavoritesScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 windowInsets = WindowInsets.statusBars
             )

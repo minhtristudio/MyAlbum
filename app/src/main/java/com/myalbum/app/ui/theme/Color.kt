@@ -17,21 +17,22 @@ object AppColors {
 
     // Premium Gradients
     val GradientStart = Color(0xFF6750A4)
-    val GradientEnd = Color(0xFFB76E79)
     val GradientMid = Color(0xFF9C6ADE)
+    val GradientEnd = Color(0xFFD0BCFF)
+
+    // Warm Accent Gradient
+    val WarmStart = Color(0xFFFF6B6B)
+    val WarmEnd = Color(0xFFFFA07A)
 
     // Glassmorphism
-    val GlassLight = Color(0x33FFFFFF)
+    val GlassLight = Color(0x28FFFFFF)
     val GlassDark = Color(0x1AFFFFFF)
-    val GlassBorder = Color(0x26FFFFFF)
+    val GlassBorder = Color(0x20FFFFFF)
 
     // Premium Surface
-    val SurfaceElevated = Color(0xFF1E1E2E)
-    val SurfaceCard = Color(0xFF16162A)
-    val SurfaceHighlight = Color(0xFF2A2A42)
-
-    // Stats
-    val StatsBackground = Color(0x1A6750A4)
+    val SurfaceElevated = Color(0xFF1E1E22)
+    val SurfaceCard = Color(0xFF1A1A1E)
+    val SurfaceHighlight = Color(0xFF2A2A30)
 
     // Accent Colors
     val AccentBlue = Color(0xFF4285F4)

@@ -16,9 +16,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -44,7 +43,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -100,7 +98,6 @@ fun ViewerScreen(
     val context = LocalContext.current
     val activity = context as? android.app.Activity
 
-    // Start in immersive mode (no system bars)
     var isSystemUiVisible by remember { mutableStateOf(false) }
     var currentPage by remember { mutableIntStateOf(initialIndex) }
     var isSlideShowActive by remember { mutableStateOf(false) }
@@ -133,7 +130,7 @@ fun ViewerScreen(
         }
     }
 
-    // Control system bars visibility
+    // Control system bars
     LaunchedEffect(isSystemUiVisible) {
         activity?.window?.let { window ->
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
@@ -245,7 +242,6 @@ fun ViewerScreen(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // Full-screen pager
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
@@ -259,7 +255,7 @@ fun ViewerScreen(
             )
         }
 
-        // ==================== Top Bar with Status Bar Padding ====================
+        // ==================== Top Controls ====================
         AnimatedVisibility(
             visible = isSystemUiVisible,
             enter = fadeIn(tween(200)) + slideInVertically(initialOffsetY = { -it }),
@@ -274,13 +270,13 @@ fun ViewerScreen(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                Color.Black.copy(alpha = 0.8f),
-                                Color.Black.copy(alpha = 0.4f),
+                                Color.Black.copy(alpha = 0.7f),
+                                Color.Black.copy(alpha = 0.3f),
                                 Color.Transparent
                             )
                         )
                     )
-                    .padding(horizontal = 2.dp, vertical = 4.dp)
+                    .padding(horizontal = 4.dp, vertical = 4.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -288,10 +284,10 @@ fun ViewerScreen(
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Back button with glass background
+                    // Back
                     Surface(
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.15f)
+                        color = Color.White.copy(alpha = 0.12f)
                     ) {
                         IconButton(onClick = onBack) {
                             Icon(
@@ -302,7 +298,7 @@ fun ViewerScreen(
                         }
                     }
 
-                    // Title + subtitle
+                    // Title
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -321,39 +317,32 @@ fun ViewerScreen(
                             Text(
                                 "${currentPage + 1} / ${items.size}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.65f)
+                                color = Color.White.copy(alpha = 0.6f)
                             )
                         }
                     }
 
-                    // Action buttons with glass backgrounds
-                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
-                        IconButton(onClick = {
+                    // Actions
+                    ViewerActionButton(
+                        icon = if (isSlideShowActive) Icons.Default.Close else Icons.Default.Repeat,
+                        tint = if (isSlideShowActive) AppColors.SlideShowActive else Color.White,
+                        onClick = {
                             isSlideShowActive = !isSlideShowActive
                             isSystemUiVisible = false
-                        }) {
-                            Icon(
-                                if (isSlideShowActive) Icons.Default.Close else Icons.Default.Repeat,
-                                contentDescription = "Trinh chieu",
-                                tint = if (isSlideShowActive) AppColors.SlideShowActive else Color.White
-                            )
                         }
-                    }
+                    )
 
-                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
-                        IconButton(onClick = { /* Toggle favorite */ }) {
-                            val isFav = items.getOrNull(currentPage)?.isFavorite == true
-                            Icon(
-                                if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Yeu thich",
-                                tint = if (isFav) AppColors.FavoriteActive else Color.White
-                            )
-                        }
-                    }
+                    val isFav = items.getOrNull(currentPage)?.isFavorite == true
+                    ViewerActionButton(
+                        icon = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        tint = if (isFav) AppColors.FavoriteActive else Color.White,
+                        onClick = { }
+                    )
 
-                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
-                        IconButton(onClick = {
-                            val shareItem = items.getOrNull(currentPage) ?: return@IconButton
+                    ViewerActionButton(
+                        icon = Icons.Default.Share,
+                        onClick = {
+                            val shareItem = items.getOrNull(currentPage) ?: return@ViewerActionButton
                             val shareIntent = android.content.Intent().apply {
                                 action = android.content.Intent.ACTION_SEND
                                 type = shareItem.mimeType
@@ -361,22 +350,18 @@ fun ViewerScreen(
                                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
                             context.startActivity(android.content.Intent.createChooser(shareIntent, "Chia se"))
-                        }) {
-                            Icon(Icons.Default.Share, contentDescription = "Chia se", tint = Color.White)
                         }
-                    }
+                    )
 
-                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Xoa", tint = Color.White)
-                        }
-                    }
+                    ViewerActionButton(
+                        icon = Icons.Default.Delete,
+                        onClick = { showDeleteDialog = true }
+                    )
 
-                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.15f)) {
-                        IconButton(onClick = { showInfoSheet = true }) {
-                            Icon(Icons.Default.Info, contentDescription = "Thong tin", tint = Color.White)
-                        }
-                    }
+                    ViewerActionButton(
+                        icon = Icons.Default.Info,
+                        onClick = { showInfoSheet = true }
+                    )
                 }
             }
         }
@@ -393,11 +378,11 @@ fun ViewerScreen(
             PageIndicator(
                 currentPage = currentPage,
                 totalPages = items.size,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             )
         }
 
-        // Slideshow indicator badge
+        // Slideshow badge
         AnimatedVisibility(
             visible = isSlideShowActive,
             enter = fadeIn(),
@@ -407,9 +392,9 @@ fun ViewerScreen(
                 .windowInsetsPadding(WindowInsets.statusBars)
         ) {
             Surface(
-                modifier = Modifier.padding(end = 12.dp, top = 4.dp),
+                modifier = Modifier.padding(end = 16.dp, top = 8.dp),
                 shape = RoundedCornerShape(24.dp),
-                color = AppColors.SlideShowActive.copy(alpha = 0.9f)
+                color = AppColors.SlideShowActive.copy(alpha = 0.85f)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -424,6 +409,26 @@ fun ViewerScreen(
     }
 }
 
+@Composable
+fun ViewerActionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color = Color.White,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = CircleShape,
+        color = Color.White.copy(alpha = 0.12f)
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = tint
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
@@ -432,7 +437,7 @@ fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     ) {
         Column(
@@ -442,19 +447,19 @@ fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
         ) {
             Text("Thong tin chi tiet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(16.dp))
-            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
 
             InfoRow(label = "Ten file", value = item.name)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.width > 0 && item.height > 0) {
                 InfoRow(label = "Do phan giai", value = "${item.width} x ${item.height} px")
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             InfoRow(label = "Kich thuoc", value = item.formattedSize)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             val dateStr = try {
                 val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
@@ -462,21 +467,21 @@ fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
             } catch (e: Exception) { "${item.dateAdded}" }
 
             InfoRow(label = "Ngay them", value = dateStr)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.isVideo && item.duration > 0) {
                 InfoRow(label = "Thoi luong", value = item.formattedDuration)
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             InfoRow(label = "Loai file", value = item.mimeType)
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             InfoRow(label = "Loai media", value = if (item.isVideo) "Video" else "Anh")
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.bucketName.isNotEmpty()) {
                 InfoRow(label = "Album", value = item.bucketName)
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -487,7 +492,7 @@ fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
 @Composable
 fun InfoRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -508,7 +513,7 @@ fun PageIndicator(currentPage: Int, totalPages: Int, modifier: Modifier = Modifi
         modifier = modifier
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))
+                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
                 )
             )
             .padding(horizontal = 24.dp, vertical = 16.dp),
@@ -516,7 +521,7 @@ fun PageIndicator(currentPage: Int, totalPages: Int, modifier: Modifier = Modifi
     ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = Color.Black.copy(alpha = 0.5f)
+            color = Color.Black.copy(alpha = 0.45f)
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -623,16 +628,16 @@ fun PhotoViewerPage(item: AppMediaItem, onTap: () -> Unit, modifier: Modifier = 
             filterQuality = FilterQuality.High
         )
 
-        // Premium vignette overlay
+        // Subtle vignette
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .drawWithContent {
                     drawContent()
                     val vignetteBrush = Brush.radialGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.25f)),
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.2f)),
                         center = center,
-                        radius = size.width * 0.75f
+                        radius = size.width * 0.8f
                     )
                     drawRect(brush = vignetteBrush)
                 }

@@ -15,17 +15,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// ==================== Dark Theme Colors - Premium Deep Blue ====================
+// ==================== Dark Theme - True Dark Slate ====================
 
-private val DarkBackground = Color(0xFF0A0A14)
-private val DarkSurface = Color(0xFF12121E)
-private val DarkSurfaceVariant = Color(0xFF1C1C30)
-private val DarkSurfaceContainer = Color(0xFF1A1A2E)
-private val DarkSurfaceContainerHigh = Color(0xFF252540)
+private val DarkBackground = Color(0xFF0C0C0E)
+private val DarkSurface = Color(0xFF161618)
+private val DarkSurfaceVariant = Color(0xFF1E1E22)
+private val DarkSurfaceContainerLow = Color(0xFF141416)
+private val DarkSurfaceContainer = Color(0xFF1C1C20)
+private val DarkSurfaceContainerHigh = Color(0xFF26262C)
 
-private val DarkPrimary = Color(0xFFBB86FC)
-private val DarkOnPrimary = Color(0xFF21005D)
-private val DarkPrimaryContainer = Color(0xFF3D2278)
+private val DarkPrimary = Color(0xFFD0BCFF)
+private val DarkOnPrimary = Color(0xFF381E72)
+private val DarkPrimaryContainer = Color(0xFF4F378B)
 private val DarkOnPrimaryContainer = Color(0xFFEADDFF)
 
 private val DarkSecondary = Color(0xFFCCC2DC)
@@ -38,24 +39,24 @@ private val DarkOnTertiary = Color(0xFF492532)
 private val DarkTertiaryContainer = Color(0xFF633B48)
 private val DarkOnTertiaryContainer = Color(0xFFFFD8E4)
 
-private val DarkOutline = Color(0xFF3E3A56)
-private val DarkOutlineVariant = Color(0xFF2A2840)
+private val DarkOutline = Color(0xFF938F99)
+private val DarkOutlineVariant = Color(0xFF49454F)
 
-// ==================== Light Theme Colors - Premium Clean ====================
+// ==================== Light Theme - Clean Warm ====================
 
-private val LightBackground = Color(0xFFF5F3FF)
+private val LightBackground = Color(0xFFFFFBFE)
 private val LightSurface = Color(0xFFFFFBFE)
-private val LightSurfaceVariant = Color(0xFFEDE6F7)
+private val LightSurfaceVariant = Color(0xFFF3EDF7)
 
 private val LightPrimary = Color(0xFF6750A4)
 private val LightOnPrimary = Color(0xFFFFFFFF)
 private val LightPrimaryContainer = Color(0xFFEADDFF)
 private val LightOnPrimaryContainer = Color(0xFF21005D)
 
-private val LightSecondary = Color(0xFFB76E79)
+private val LightSecondary = Color(0xFF625B71)
 private val LightOnSecondary = Color(0xFFFFFFFF)
-private val LightSecondaryContainer = Color(0xFFFFD8E4)
-private val LightOnSecondaryContainer = Color(0xFF31111D)
+private val LightSecondaryContainer = Color(0xFFE8DEF8)
+private val LightOnSecondaryContainer = Color(0xFF1D192B)
 
 private val LightTertiary = Color(0xFF7D5260)
 private val LightOnTertiary = Color(0xFFFFFFFF)
@@ -92,7 +93,10 @@ private val DarkColorScheme = darkColorScheme(
     onError = Color(0xFF601410),
     inverseSurface = Color(0xFFE6E1E5),
     inverseOnSurface = Color(0xFF322F35),
-    inversePrimary = Color(0xFF6750A4)
+    inversePrimary = Color(0xFF6750A4),
+    surfaceContainerLow = DarkSurfaceContainerLow,
+    surfaceContainer = DarkSurfaceContainer,
+    surfaceContainerHigh = DarkSurfaceContainerHigh,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -120,7 +124,10 @@ private val LightColorScheme = lightColorScheme(
     onError = Color.White,
     inverseSurface = Color(0xFF322F35),
     inverseOnSurface = Color(0xFFF5EFF7),
-    inversePrimary = Color(0xFFD0BCFF)
+    inversePrimary = Color(0xFFD0BCFF),
+    surfaceContainerLow = Color(0xFFF7F2FA),
+    surfaceContainer = Color(0xFFF3EDF7),
+    surfaceContainerHigh = Color(0xFFECE6F0),
 )
 
 @Composable
