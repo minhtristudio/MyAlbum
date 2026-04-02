@@ -692,10 +692,9 @@ fun MediaGridItem(
         }
 
         // Image/Video thumbnail
-        val imageModel: Any = if (item.isVideo && videoThumbnailUri != null) {
-            videoThumbnailUri!!
+        val imageModel = if (item.isVideo && videoThumbnailUri != null) {
+            videoThumbnailUri as Any
         } else if (item.isVideo) {
-            // Video thumbnail not yet ready or failed
             null
         } else {
             item.uri
