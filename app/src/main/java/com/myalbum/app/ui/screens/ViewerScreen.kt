@@ -11,9 +11,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +33,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
@@ -54,7 +53,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,10 +60,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -87,7 +83,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewerScreen(
     items: List<AppMediaItem>,
@@ -314,7 +310,7 @@ fun ViewerScreen(
                     IconButton(onClick = { /* Toggle favorite */ }) {
                         val isFav = items.getOrNull(currentPage)?.isFavorite == true
                         Icon(
-                            if (isFav) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = "Yeu thich",
                             tint = if (isFav) AppColors.FavoriteActive else Color.White
                         )
@@ -587,7 +583,6 @@ fun PageIndicator(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ViewerPage(
     item: AppMediaItem,
@@ -651,15 +646,12 @@ fun VideoPlayerView(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PhotoViewerPage(
     item: AppMediaItem,
     onTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isZoomed by remember { mutableFloatStateOf(1f) }
-
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -669,16 +661,7 @@ fun PhotoViewerPage(
             contentDescription = item.name,
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer(
-                    scaleX = isZoomed,
-                    scaleY = isZoomed
-                )
-                .combinedClickable(
-                    onClick = { onTap() },
-                    onDoubleClick = {
-                        isZoomed = if (isZoomed > 1f) 1f else 2.5f
-                    }
-                ),
+                .clickable { onTap() },
             contentScale = ContentScale.Fit,
             filterQuality = FilterQuality.High
         )

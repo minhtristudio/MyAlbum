@@ -39,13 +39,6 @@ jobs:
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/myalbum-release.jks
 
-    - name: Build Debug APK
-      env:
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: ./gradlew assembleDebug --stacktrace
-
     - name: Build Signed Release APK
       env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -53,16 +46,33 @@ jobs:
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: ./gradlew assembleRelease --stacktrace
 
-    - name: Upload Debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: MyAlbum-debug
-        path: app/build/outputs/apk/debug/*.apk
-        retention-days: 30
-
     - name: Upload Signed Release APK
       uses: actions/upload-artifact@v4
       with:
         name: MyAlbum-release-signed
         path: app/build/outputs/apk/release/*.apk
         retention-days: 90
+
+    - name: Create GitHub Release
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v3.2.0
+        name: MyAlbum v3.2.0
+        body: |
+          ## MyAlbum v3.2.0
+
+          ### Bug Fixes:
+          - Fixed compile error preventing app from building
+          - Fixed photo swipe (left/right) in viewer
+          - Fixed dark mode toggle and persistence
+          - Fixed column count setting and persistence
+          - Fixed status bar inset handling on all screens
+          - Removed unused emoji/icon conflicts
+
+          ### Created by MT Studio
+        files: app/build/outputs/apk/release/*.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

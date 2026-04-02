@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -141,7 +142,7 @@ fun SettingsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
-                windowInsets = WindowInsets(0, 0, 0, 0)
+                windowInsets = WindowInsets.statusBars
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -345,7 +346,7 @@ fun AboutCard(
             )
 
             Text(
-                "v3.1.0",
+                "v3.2.0",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

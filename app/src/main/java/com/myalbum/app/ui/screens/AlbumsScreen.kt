@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -130,7 +131,7 @@ fun AlbumListScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
-                windowInsets = WindowInsets(0, 0, 0, 0)
+                windowInsets = WindowInsets.statusBars
             )
         }
     ) { paddingValues ->
@@ -340,7 +341,7 @@ fun AlbumMediaScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
-                windowInsets = WindowInsets(0, 0, 0, 0)
+                windowInsets = WindowInsets.statusBars
             )
         }
     ) { paddingValues ->
@@ -419,7 +420,7 @@ fun FavoritesScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
-                windowInsets = WindowInsets(0, 0, 0, 0)
+                windowInsets = WindowInsets.statusBars
             )
         }
     ) { paddingValues ->

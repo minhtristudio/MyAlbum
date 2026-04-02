@@ -169,6 +169,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     MainNavigation(
                         gridSize = gridSize,
+                        darkTheme = darkTheme,
                         onGridSizeChanged = { newSize -> gridSize = newSize },
                         onDarkThemeChanged = { isDark -> darkTheme = isDark }
                     )
@@ -300,7 +301,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                         )
                         Text(
-                            "v3.1.0",
+                            "v3.2.0",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.5f)
                         )
@@ -335,6 +336,7 @@ val bottomNavItems = listOf(
 @Composable
 fun MainNavigation(
     gridSize: Int,
+    darkTheme: Boolean,
     onGridSizeChanged: (Int) -> Unit,
     onDarkThemeChanged: (Boolean) -> Unit
 ) {
