@@ -152,7 +152,7 @@ fun SettingsScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ) {
                 Column {
                     SettingSwitchItem(
@@ -165,7 +165,7 @@ fun SettingsScreen(
                             scope.launch { saveThemeMode(context, if (checked) "dark" else "light") }
                         }
                     )
-                    androidx.compose.material3.HorizontalDivider(
+                    androidx.compose.material3.Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
@@ -181,7 +181,7 @@ fun SettingsScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().selectableGroup().padding(horizontal = 8.dp, vertical = 4.dp),
@@ -221,7 +221,7 @@ fun SettingsScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ) {
                 Column {
                     SettingItem(
@@ -235,7 +235,7 @@ fun SettingsScreen(
                             } catch (_: Exception) {}
                         }
                     )
-                    androidx.compose.material3.HorizontalDivider(
+                    androidx.compose.material3.Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
@@ -253,7 +253,7 @@ fun SettingsScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ) {
                 Column {
                     SettingItem(
@@ -261,7 +261,7 @@ fun SettingsScreen(
                         title = "Android yeu cau",
                         subtitle = "Android 8.0+ (API 26+)"
                     )
-                    androidx.compose.material3.HorizontalDivider(
+                    androidx.compose.material3.Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
@@ -270,7 +270,7 @@ fun SettingsScreen(
                         title = "Thiet ke",
                         subtitle = "Material You (M3) - Jetpack Compose"
                     )
-                    androidx.compose.material3.HorizontalDivider(
+                    androidx.compose.material3.Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
@@ -309,7 +309,7 @@ fun AboutCard(modifier: Modifier = Modifier) {
                 shape = RoundedCornerShape(24.dp)
             ),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         tonalElevation = 0.dp
     ) {
         Column(

@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -437,7 +438,7 @@ fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     ) {
         Column(
@@ -447,19 +448,19 @@ fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
         ) {
             Text("Thong tin chi tiet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(16.dp))
-            androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
 
             InfoRow(label = "Ten file", value = item.name)
-            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.width > 0 && item.height > 0) {
                 InfoRow(label = "Do phan giai", value = "${item.width} x ${item.height} px")
-                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             InfoRow(label = "Kich thuoc", value = item.formattedSize)
-            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             val dateStr = try {
                 val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
@@ -467,21 +468,21 @@ fun InfoBottomSheet(item: AppMediaItem, onDismiss: () -> Unit) {
             } catch (e: Exception) { "${item.dateAdded}" }
 
             InfoRow(label = "Ngay them", value = dateStr)
-            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.isVideo && item.duration > 0) {
                 InfoRow(label = "Thoi luong", value = item.formattedDuration)
-                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             InfoRow(label = "Loai file", value = item.mimeType)
-            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
             InfoRow(label = "Loai media", value = if (item.isVideo) "Video" else "Anh")
-            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (item.bucketName.isNotEmpty()) {
                 InfoRow(label = "Album", value = item.bucketName)
-                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
 
             Spacer(modifier = Modifier.height(24.dp))

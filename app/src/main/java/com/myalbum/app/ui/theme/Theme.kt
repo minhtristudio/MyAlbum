@@ -20,9 +20,6 @@ import androidx.core.view.WindowCompat
 private val DarkBackground = Color(0xFF0C0C0E)
 private val DarkSurface = Color(0xFF161618)
 private val DarkSurfaceVariant = Color(0xFF1E1E22)
-private val DarkSurfaceContainerLow = Color(0xFF141416)
-private val DarkSurfaceContainer = Color(0xFF1C1C20)
-private val DarkSurfaceContainerHigh = Color(0xFF26262C)
 
 private val DarkPrimary = Color(0xFFD0BCFF)
 private val DarkOnPrimary = Color(0xFF381E72)
@@ -93,10 +90,7 @@ private val DarkColorScheme = darkColorScheme(
     onError = Color(0xFF601410),
     inverseSurface = Color(0xFFE6E1E5),
     inverseOnSurface = Color(0xFF322F35),
-    inversePrimary = Color(0xFF6750A4),
-    surfaceContainerLow = DarkSurfaceContainerLow,
-    surfaceContainer = DarkSurfaceContainer,
-    surfaceContainerHigh = DarkSurfaceContainerHigh,
+    inversePrimary = Color(0xFF6750A4)
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -125,9 +119,6 @@ private val LightColorScheme = lightColorScheme(
     inverseSurface = Color(0xFF322F35),
     inverseOnSurface = Color(0xFFF5EFF7),
     inversePrimary = Color(0xFFD0BCFF),
-    surfaceContainerLow = Color(0xFFF7F2FA),
-    surfaceContainer = Color(0xFFF3EDF7),
-    surfaceContainerHigh = Color(0xFFECE6F0),
 )
 
 @Composable

@@ -338,7 +338,7 @@ fun StatsBar(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         tonalElevation = 0.dp
     ) {
         Row(
@@ -452,7 +452,7 @@ fun MediaTypeDropdownMenu(
             onClick = { onTypeSelected(currentType) },
             leadingIcon = { Icon(Icons.Default.Schedule, contentDescription = null) }
         )
-        androidx.compose.material3.HorizontalDivider()
+        androidx.compose.material3.Divider()
         androidx.compose.material3.DropdownMenuItem(
             text = { Text("Anh") },
             onClick = { onTypeSelected(MediaStoreHelper.MediaType.PHOTOS) },
@@ -646,7 +646,7 @@ fun MediaGridItem(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
             }
         )
@@ -772,7 +772,7 @@ fun EmptyStateView(
         ) {
             Surface(
                 shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Icon(
                     icon,
