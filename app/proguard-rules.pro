@@ -1,5 +1,5 @@
 # ==================== VenCA - DEX Protection Rules ====================
-# MyAlbum v4.0.0 - MT Studio
+# MyAlbum v4.0.1 - MT Studio
 
 # ==================== Core Protection ====================
 -keepattributes SourceFile,LineNumberTable
@@ -10,6 +10,22 @@
 -dontusemixedcaseclassnames
 -dontskipnonpubliclibraryclasses
 -verbose
+
+# ==================== Kotlin Metadata & Intrinsics (CRITICAL) ====================
+# KEEP kotlin.jvm.internal - removing these causes IMMEDIATE crash
+-keep class kotlin.jvm.internal.** { *; }
+-keepclassmembers class kotlin.jvm.internal.** { *; }
+
+# Keep Kotlin metadata for reflection
+-keepattributes *Annotation*
+-keep class kotlin.Metadata { *; }
+
+# Keep Kotlin coroutines
+-keepclassmembers class kotlinx.coroutines.** {
+    volatile <fields>;
+}
+-keep class kotlinx.coroutines.internal.** { *; }
+-dontwarn kotlinx.coroutines.**
 
 # ==================== AndroidX ====================
 -keep class androidx.** { *; }
@@ -36,12 +52,6 @@
 -keepclassmembers class coil.** { *; }
 -dontwarn coil.**
 
-# ==================== Kotlin Coroutines ====================
--keepclassmembers class kotlinx.coroutines.** {
-    volatile <fields>;
-}
--dontwarn kotlinx.coroutines.**
-
 # ==================== Navigation ====================
 -keep class androidx.navigation.** { *; }
 -keepclassmembers class androidx.navigation.** { *; }
@@ -59,25 +69,49 @@
     public *;
 }
 
-# ==================== Models ====================
+# ==================== App Models ====================
 -keep class com.myalbum.app.data.MediaItem { *; }
 -keep class com.myalbum.app.data.AlbumInfo { *; }
+-keep class com.myalbum.app.data.MediaStoreHelper$MediaType { *; }
+-keep class com.myalbum.app.data.MediaStoreHelper$SortOrder { *; }
+
+# ==================== App Enums ====================
+-keepclassmembers enum com.myalbum.app.** {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+    **[] $VALUES;
+    public *;
+}
+
+# ==================== ViewModels ====================
+-keep class com.myalbum.app.viewmodel.** { *; }
+-keepclassmembers class com.myalbum.app.viewmodel.** { *; }
+
+# ==================== Navigation Routes ====================
+-keep class com.myalbum.app.ui.navigation.Screen { *; }
+-keepclassmembers class com.myalbum.app.ui.navigation.Screen$* { *; }
+
+# ==================== Compose @Composable Functions ====================
+# Keep all Composable functions in the app
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable <methods>;
+}
 
 # ==================== Serialization ====================
 -keepclassmembers class * {
     ** serialization;
 }
 
-# ==================== Enum ====================
+# ==================== Enum (Global) ====================
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
 
-# ==================== VenCA String Encryption ====================
--assumenosideeffects class kotlin.jvm.internal.** {
-    public <methods>;
-}
+# ==================== Prevent Reflection ====================
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses
+-keepattributes Signature
 
 # ==================== Remove Logging in Release ====================
 -assumenosideeffects class android.util.Log {
@@ -85,12 +119,6 @@
     public static *** v(...);
     public static *** i(...);
 }
-
-# ==================== Prevent Reflection ====================
--keepattributes *Annotation*
--keepattributes EnclosingMethod
--keepattributes InnerClasses
--keepattributes Signature
 
 # ==================== WebView (if used) ====================
 -keepclassmembers class * extends android.webkit.WebViewClient {

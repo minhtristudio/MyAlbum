@@ -311,7 +311,7 @@ fun PermissionRequestScreen(onRequestPermissions: () -> Unit) {
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White.copy(alpha = 0.5f))
-                        Text("v4.0.0", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.45f))
+                        Text("v4.0.1", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.45f))
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Text("Created by MT Studio", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.35f))
