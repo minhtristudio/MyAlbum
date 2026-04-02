@@ -68,6 +68,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.myalbum.app.data.AlbumInfo
 import com.myalbum.app.data.MediaItem
+import com.myalbum.app.ui.theme.AppColors
 import com.myalbum.app.viewmodel.AlbumViewModel
 
 enum class AlbumSortOrder(val displayName: String) {

@@ -462,17 +462,21 @@ fun SortDropdownMenu(
     onDismiss: () -> Unit
 ) {
     androidx.compose.material3.DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
-        val sortOptions = listOf(
-            Triple("Moi nhat", Icons.Default.Schedule, MediaStoreHelper.SortOrder.DATE_DESC),
-            Triple("Cu nhat", Icons.Default.ArrowDownward, MediaStoreHelper.SortOrder.DATE_ASC),
-            Triple("Ten A-Z", Icons.Default.Sort, MediaStoreHelper.SortOrder.NAME_ASC),
+        androidx.compose.material3.DropdownMenuItem(
+            text = { Text("Moi nhat") },
+            onClick = { onDismiss() },
+            leadingIcon = { Icon(Icons.Default.Schedule, contentDescription = null) }
         )
-        sortOptions.forEach { (label, icon, order) ->
-            androidx.compose.material3.DropdownMenuItem(
-                text = { Text(label) },
-                onClick = { onDismiss() },
-                leadingIcon = { Icon(icon, contentDescription = null) }
-            )
+        androidx.compose.material3.Divider()
+        androidx.compose.material3.DropdownMenuItem(
+            text = { Text("Cu nhat") },
+            onClick = { onDismiss() },
+            leadingIcon = { Icon(Icons.Default.ArrowDownward, contentDescription = null) }
+        )
+        androidx.compose.material3.DropdownMenuItem(
+            text = { Text("Ten A-Z") },
+            onClick = { onDismiss() },
+            leadingIcon = { Icon(Icons.Default.Sort, contentDescription = null) }
         )
     }
 }
